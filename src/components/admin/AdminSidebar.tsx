@@ -1,0 +1,95 @@
+import { 
+  LayoutDashboard, 
+  Package, 
+  ShoppingCart, 
+  Store, 
+  Palette, 
+  Settings,
+  ChevronLeft,
+  ChevronRight,
+  LogOut
+} from 'lucide-react';
+import { NavLink as RouterNavLink, useLocation } from 'react-router-dom';
+import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+
+interface AdminSidebarProps {
+  collapsed: boolean;
+  onToggle: () => void;
+}
+
+const navItems = [
+  { icon: LayoutDashboard, label: 'Dashboard', path: '/' },
+  { icon: Store, label: 'Stores', path: '/stores' },
+  { icon: Package, label: 'Inventory', path: '/inventory' },
+  { icon: ShoppingCart, label: 'Orders', path: '/orders' },
+  { icon: Palette, label: 'Templates', path: '/templates' },
+  { icon: Settings, label: 'Settings', path: '/settings' },
+];
+
+export function AdminSidebar({ collapsed, onToggle }: AdminSidebarProps) {
+  const location = useLocation();
+
+  return (
+    <aside 
+      className={cn(
+        "fixed left-0 top-0 h-screen bg-sidebar text-sidebar-foreground transition-all duration-300 z-50 flex flex-col",
+        collapsed ? "w-16" : "w-64"
+      )}
+    >
+      {/* Logo */}
+      <div className="flex items-center justify-between h-16 px-4 border-b border-sidebar-border">
+        {!collapsed && (
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-sidebar-primary flex items-center justify-center">
+              <Store className="w-5 h-5 text-sidebar-primary-foreground" />
+            </div>
+            <span className="font-bold text-lg">StoreHub</span>
+          </div>
+        )}
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={onToggle}
+          className="text-sidebar-muted hover:text-sidebar-foreground hover:bg-sidebar-accent"
+        >
+          {collapsed ? <ChevronRight className="w-5 h-5" /> : <ChevronLeft className="w-5 h-5" />}
+        </Button>
+      </div>
+
+      {/* Navigation */}
+      <nav className="flex-1 py-4 px-2 space-y-1">
+        {navItems.map((item) => {
+          const isActive = location.pathname === item.path;
+          return (
+            <RouterNavLink
+              key={item.path}
+              to={item.path}
+              className={cn(
+                "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200",
+                isActive 
+                  ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-md" 
+                  : "text-sidebar-muted hover:text-sidebar-foreground hover:bg-sidebar-accent"
+              )}
+            >
+              <item.icon className={cn("w-5 h-5 shrink-0", collapsed && "mx-auto")} />
+              {!collapsed && <span className="font-medium">{item.label}</span>}
+            </RouterNavLink>
+          );
+        })}
+      </nav>
+
+      {/* Bottom Section */}
+      <div className="p-4 border-t border-sidebar-border">
+        <button 
+          className={cn(
+            "flex items-center gap-3 px-3 py-2.5 rounded-lg w-full text-sidebar-muted hover:text-sidebar-foreground hover:bg-sidebar-accent transition-all duration-200"
+          )}
+        >
+          <LogOut className={cn("w-5 h-5 shrink-0", collapsed && "mx-auto")} />
+          {!collapsed && <span className="font-medium">Logout</span>}
+        </button>
+      </div>
+    </aside>
+  );
+}
