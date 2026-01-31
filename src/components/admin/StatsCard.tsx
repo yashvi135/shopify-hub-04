@@ -11,14 +11,14 @@ interface StatsCardProps {
 
 export function StatsCard({ title, value, change, icon: Icon, trend }: StatsCardProps) {
   return (
-    <div className="bg-card rounded-xl p-6 shadow-card hover:shadow-elevated transition-all duration-300 animate-fade-in border border-border/50">
+    <div className="luxury-card p-6 animate-fade-in">
       <div className="flex items-start justify-between">
         <div>
           <p className="text-sm font-medium text-muted-foreground">{title}</p>
-          <p className="text-2xl font-bold text-card-foreground mt-1">{value}</p>
+          <p className="text-3xl font-display font-bold text-card-foreground mt-2">{value}</p>
           {change !== undefined && (
             <div className={cn(
-              "flex items-center gap-1 mt-2 text-sm font-medium",
+              "flex items-center gap-1 mt-3 text-sm font-medium",
               trend === 'up' ? "text-success" : "text-destructive"
             )}>
               {trend === 'up' ? (
@@ -31,8 +31,8 @@ export function StatsCard({ title, value, change, icon: Icon, trend }: StatsCard
             </div>
           )}
         </div>
-        <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
-          <Icon className="w-6 h-6 text-primary" />
+        <div className="w-14 h-14 rounded-2xl bg-gold-light flex items-center justify-center">
+          <Icon className="w-7 h-7 text-gold" />
         </div>
       </div>
     </div>
