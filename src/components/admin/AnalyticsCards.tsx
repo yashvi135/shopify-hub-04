@@ -14,22 +14,22 @@ export function AnalyticsCards() {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-fade-in">
       {/* Top Selling Category */}
-      <Card className="luxury-card">
+      <Card className="modern-card">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-            <Crown className="w-4 h-4 text-gold" />
+            <Crown className="w-4 h-4 text-foreground" />
             Top Selling Category
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-2xl font-display font-bold text-foreground">{topCategory.name}</p>
+              <p className="text-2xl font-bold text-foreground">{topCategory.name}</p>
               <p className="text-sm text-muted-foreground mt-1">
                 {topCategory.count} products sold
               </p>
             </div>
-            <div className="w-14 h-14 rounded-2xl bg-gold-light flex items-center justify-center">
+            <div className="w-14 h-14 rounded-2xl bg-secondary flex items-center justify-center">
               <span className="text-3xl">🥻</span>
             </div>
           </div>
@@ -37,17 +37,17 @@ export function AnalyticsCards() {
       </Card>
 
       {/* Total Revenue */}
-      <Card className="luxury-card">
+      <Card className="modern-card">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-            <IndianRupee className="w-4 h-4 text-gold" />
+            <IndianRupee className="w-4 h-4 text-foreground" />
             Total Revenue
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-2xl font-display font-bold text-foreground">
+              <p className="text-2xl font-bold text-foreground">
                 ₹{role === 'SUPER_ADMIN' 
                   ? (dashboardStats.totalRevenue / 100000).toFixed(1) 
                   : currentStore 
@@ -69,10 +69,10 @@ export function AnalyticsCards() {
       </Card>
 
       {/* Category Breakdown */}
-      <Card className="luxury-card md:col-span-2 lg:col-span-1">
+      <Card className="modern-card md:col-span-2 lg:col-span-1">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-            <Package className="w-4 h-4 text-gold" />
+            <Package className="w-4 h-4 text-foreground" />
             Category Performance
           </CardTitle>
         </CardHeader>

@@ -23,13 +23,13 @@ export default function Dashboard() {
     <div className="space-y-8">
       {/* Page Header */}
       <div>
-        <h1 className="text-3xl font-display font-bold text-foreground">
+        <h1 className="text-3xl font-bold text-foreground">
           {role === 'SUPER_ADMIN' ? 'Dashboard' : `Welcome, ${currentStore?.ownerName || 'Store Owner'}`}
         </h1>
         <p className="text-muted-foreground">
           {role === 'SUPER_ADMIN' 
             ? "Overview of your garment marketplace" 
-            : `Manage your boutique: ${currentStore?.name || ''}`
+            : `Manage your store: ${currentStore?.name || ''}`
           }
         </p>
       </div>
@@ -57,7 +57,7 @@ export default function Dashboard() {
         />
         {role === 'SUPER_ADMIN' ? (
           <StatsCard 
-            title="Active Boutiques" 
+            title="Active Stores" 
             value={dashboardStats.activeStores} 
             icon={Store}
           />

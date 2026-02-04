@@ -7,8 +7,8 @@ import { useRole } from '@/contexts/RoleContext';
 import { Link } from 'react-router-dom';
 
 const statusConfig: Record<OrderStatus, { label: string; style: string }> = {
-  received: { label: '💝 Received', style: 'bg-rose-light text-rose-foreground border-rose/30' },
-  curating: { label: '🧵 Curating', style: 'bg-gold-light text-gold-foreground border-gold/30' },
+  received: { label: '💝 Received', style: 'bg-secondary text-foreground border-border' },
+  curating: { label: '🧵 Curating', style: 'bg-warning/10 text-warning border-warning/30' },
   dispatched: { label: '🚚 Dispatched', style: 'bg-primary/10 text-primary border-primary/30' },
   delivered: { label: '✨ Delivered', style: 'bg-success/10 text-success border-success/30' },
 };
@@ -21,16 +21,16 @@ export function RecentOrders() {
     : orders;
 
   return (
-    <Card className="luxury-card animate-fade-in">
+    <Card className="modern-card animate-fade-in">
       <CardHeader className="pb-4">
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle className="font-display">Recent Orders</CardTitle>
+            <CardTitle className="font-semibold">Recent Orders</CardTitle>
             <p className="text-sm text-muted-foreground mt-1">
-              {role === 'SUPER_ADMIN' ? 'Latest orders from all boutiques' : 'Your latest orders'}
+              {role === 'SUPER_ADMIN' ? 'Latest orders from all stores' : 'Your latest orders'}
             </p>
           </div>
-          <Link to="/orders" className="text-sm font-medium text-gold hover:underline">
+          <Link to="/orders" className="text-sm font-medium text-primary hover:underline">
             View all
           </Link>
         </div>
@@ -45,8 +45,8 @@ export function RecentOrders() {
                 className="flex items-center justify-between p-4 rounded-2xl bg-secondary/50 hover:bg-secondary transition-colors duration-200"
               >
                 <div className="flex items-center gap-4">
-                  <div className="w-11 h-11 rounded-full bg-gradient-to-br from-gold to-rose flex items-center justify-center">
-                    <span className="text-sm font-semibold text-white">
+                  <div className="w-11 h-11 rounded-full bg-primary flex items-center justify-center">
+                    <span className="text-sm font-semibold text-primary-foreground">
                       {order.customerName.charAt(0)}
                     </span>
                   </div>
@@ -57,7 +57,7 @@ export function RecentOrders() {
                 </div>
                 <div className="flex items-center gap-4">
                   <div className="text-right">
-                    <p className="font-display font-bold text-card-foreground">₹{order.total.toLocaleString()}</p>
+                    <p className="font-bold text-card-foreground">₹{order.total.toLocaleString()}</p>
                     <p className="text-xs text-muted-foreground">{order.items} items</p>
                   </div>
                   <Badge 

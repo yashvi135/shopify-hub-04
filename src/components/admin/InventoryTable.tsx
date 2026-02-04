@@ -1,20 +1,29 @@
 import { useState } from 'react';
-import { products, stores } from '@/data/mockData';
+import { products, stores, categories } from '@/data/mockData';
 import { Product } from '@/types/admin';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
-import { Edit, Trash2, Plus, Search, Filter, Sparkles } from 'lucide-react';
+import { Edit, Trash2, Plus, Search, Filter, Package } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { useRole } from '@/contexts/RoleContext';
+import { InventoryView } from './InventorySidebar';
 
 interface InventoryTableProps {
   selectedStoreId: string | null;
+  activeView: InventoryView;
+  selectedCategory: string | null;
+  selectedSubcategory: string | null;
 }
 
-export function InventoryTable({ selectedStoreId }: InventoryTableProps) {
+export function InventoryTable({ 
+  selectedStoreId, 
+  activeView,
+  selectedCategory,
+  selectedSubcategory 
+}: InventoryTableProps) {
   const [productList, setProductList] = useState<Product[]>(products);
   const [searchQuery, setSearchQuery] = useState('');
   const { role, currentStoreId } = useRole();
@@ -22,12 +31,37 @@ export function InventoryTable({ selectedStoreId }: InventoryTableProps) {
   // For store owners, always filter to their store
   const effectiveStoreId = role === 'STORE_OWNER' ? currentStoreId : selectedStoreId;
   
+  // Get category/subcategory names for filtering
+  const getCategoryName = (categoryId: string) => {
+    return categories.find(c => c.id === categoryId)?.name || '';
+  };
+  
+  const getSubcategoryName = (subcategoryId: string) => {
+    for (const cat of categories) {
+      const sub = cat.subcategories.find(s => s.id === subcategoryId);
+      if (sub) return sub.name;
+    }
+    return '';
+  };
+
   const filteredProducts = productList.filter(product => {
     const matchesStore = !effectiveStoreId || product.storeId === effectiveStoreId;
     const matchesSearch = !searchQuery || 
       product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       product.category.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesStore && matchesSearch;
+    
+    // Filter by category/subcategory based on view
+    let matchesCategory = true;
+    if (selectedCategory && activeView === 'category') {
+      const categoryName = getCategoryName(selectedCategory);
+      matchesCategory = product.category.toLowerCase().includes(categoryName.toLowerCase());
+    }
+    if (selectedSubcategory && activeView === 'subcategory') {
+      const subcategoryName = getSubcategoryName(selectedSubcategory);
+      matchesCategory = product.category.toLowerCase().includes(subcategoryName.split(' ')[0].toLowerCase());
+    }
+    
+    return matchesStore && matchesSearch && matchesCategory;
   });
 
   const togglePublish = (productId: string) => {
@@ -49,20 +83,111 @@ export function InventoryTable({ selectedStoreId }: InventoryTableProps) {
     return { label: 'In Stock', style: 'bg-success/10 text-success border-success/20' };
   };
 
+  // Get view title
+  const getViewTitle = () => {
+    if (activeView === 'stock') return 'Stock Overview';
+    if (activeView === 'products') return 'All Products';
+    if (activeView === 'category' && selectedCategory) {
+      return getCategoryName(selectedCategory);
+    }
+    if (activeView === 'subcategory' && selectedSubcategory) {
+      return getSubcategoryName(selectedSubcategory);
+    }
+    return 'Products';
+  };
+
+  // Stock Overview View
+  if (activeView === 'stock') {
+    const totalStock = productList.reduce((acc, p) => acc + p.stock, 0);
+    const lowStockCount = productList.filter(p => p.stock > 0 && p.stock < 10).length;
+    const outOfStockCount = productList.filter(p => p.stock === 0).length;
+    const inStockCount = productList.filter(p => p.stock >= 10).length;
+
+    return (
+      <div className="space-y-6 animate-fade-in">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="modern-card p-5">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                <Package className="w-5 h-5 text-primary" />
+              </div>
+              <span className="text-sm text-muted-foreground">Total Stock</span>
+            </div>
+            <p className="text-2xl font-bold">{totalStock} units</p>
+          </div>
+          
+          <div className="modern-card p-5">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-10 h-10 rounded-xl bg-success/10 flex items-center justify-center">
+                <Package className="w-5 h-5 text-success" />
+              </div>
+              <span className="text-sm text-muted-foreground">In Stock</span>
+            </div>
+            <p className="text-2xl font-bold text-success">{inStockCount} products</p>
+          </div>
+          
+          <div className="modern-card p-5">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-10 h-10 rounded-xl bg-warning/10 flex items-center justify-center">
+                <Package className="w-5 h-5 text-warning" />
+              </div>
+              <span className="text-sm text-muted-foreground">Low Stock</span>
+            </div>
+            <p className="text-2xl font-bold text-warning">{lowStockCount} products</p>
+          </div>
+          
+          <div className="modern-card p-5">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-10 h-10 rounded-xl bg-destructive/10 flex items-center justify-center">
+                <Package className="w-5 h-5 text-destructive" />
+              </div>
+              <span className="text-sm text-muted-foreground">Out of Stock</span>
+            </div>
+            <p className="text-2xl font-bold text-destructive">{outOfStockCount} products</p>
+          </div>
+        </div>
+
+        {/* Category-wise stock breakdown */}
+        <div className="modern-card p-6">
+          <h3 className="font-semibold text-lg mb-4">Stock by Category</h3>
+          <div className="space-y-4">
+            {categories.map((cat) => {
+              const catProducts = productList.filter(p => 
+                p.category.toLowerCase().includes(cat.name.toLowerCase().split(' ')[0])
+              );
+              const catStock = catProducts.reduce((acc, p) => acc + p.stock, 0);
+              const percentage = totalStock > 0 ? (catStock / totalStock) * 100 : 0;
+              
+              return (
+                <div key={cat.id} className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="font-medium">{cat.name}</span>
+                    <span className="text-muted-foreground">{catStock} units ({catProducts.length} products)</span>
+                  </div>
+                  <Progress value={percentage} className="h-2" />
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // Empty State
   if (filteredProducts.length === 0 && !searchQuery) {
     return (
-      <div className="luxury-card p-12 text-center animate-fade-in">
-        <div className="w-20 h-20 rounded-full bg-gradient-to-br from-gold to-rose mx-auto mb-6 flex items-center justify-center">
-          <Sparkles className="w-10 h-10 text-white" />
+      <div className="modern-card p-12 text-center animate-fade-in">
+        <div className="w-20 h-20 rounded-full bg-secondary mx-auto mb-6 flex items-center justify-center">
+          <Package className="w-10 h-10 text-muted-foreground" />
         </div>
-        <h3 className="font-display text-2xl font-bold text-foreground mb-2">
-          Your boutique is waiting for its first masterpiece! ✨
+        <h3 className="text-2xl font-bold text-foreground mb-2">
+          Your store is waiting for its first masterpiece! ✨
         </h3>
         <p className="text-muted-foreground mb-6 max-w-md mx-auto">
           Start building your collection by adding your first product. Each piece tells a story of elegance and craftsmanship.
         </p>
-        <Button className="rounded-2xl shadow-gold gap-2">
+        <Button className="rounded-2xl gap-2">
           <Plus className="w-4 h-4" />
           Add Your First Product
         </Button>
@@ -72,12 +197,20 @@ export function InventoryTable({ selectedStoreId }: InventoryTableProps) {
 
   return (
     <div className="space-y-6 animate-fade-in">
+      {/* View Title */}
+      <div className="flex items-center justify-between">
+        <h2 className="text-xl font-semibold">{getViewTitle()}</h2>
+        <Badge variant="secondary" className="rounded-full">
+          {filteredProducts.length} products
+        </Badge>
+      </div>
+
       {/* Product Limit Progress - Show for Store Owners */}
       {(role === 'STORE_OWNER' || effectiveStoreId) && currentStore && (
-        <div className="luxury-card p-5">
+        <div className="modern-card p-5">
           <div className="flex items-center justify-between mb-3">
             <div>
-              <h4 className="font-display font-semibold">Product Upload Limit</h4>
+              <h4 className="font-semibold">Product Upload Limit</h4>
               <p className="text-sm text-muted-foreground">
                 {storeProductCount} of {currentStore.productLimit} products uploaded
               </p>
@@ -116,7 +249,7 @@ export function InventoryTable({ selectedStoreId }: InventoryTableProps) {
             <Filter className="w-4 h-4" />
             Filter
           </Button>
-          <Button className="gap-2 rounded-2xl shadow-gold">
+          <Button className="gap-2 rounded-2xl">
             <Plus className="w-4 h-4" />
             Add Product
           </Button>
@@ -133,7 +266,7 @@ export function InventoryTable({ selectedStoreId }: InventoryTableProps) {
             <div 
               key={product.id}
               className={cn(
-                "luxury-card overflow-hidden group",
+                "modern-card overflow-hidden group",
                 !product.isPublished && "opacity-70"
               )}
             >
@@ -172,7 +305,7 @@ export function InventoryTable({ selectedStoreId }: InventoryTableProps) {
                     <h4 className="font-medium text-foreground truncate">{product.name}</h4>
                     <p className="text-sm text-muted-foreground">{product.category}</p>
                   </div>
-                  <p className="font-display font-bold text-lg text-gold whitespace-nowrap">
+                  <p className="font-bold text-lg whitespace-nowrap">
                     ₹{product.price.toLocaleString()}
                   </p>
                 </div>
