@@ -3,7 +3,7 @@ import { Store, Product, Order, Template, DashboardStats, ChartData, HomePageRow
 export const stores: Store[] = [
   { 
     id: '1', 
-    name: 'Silk & Satin Boutique', 
+    name: 'Silk & Satin Store', 
     location: 'Ring Road, Surat', 
     isActive: true, 
     productLimit: 50, 
@@ -63,6 +63,55 @@ export const stores: Store[] = [
   },
 ];
 
+export const categories = [
+  {
+    id: 'cat-1',
+    name: 'Sarees',
+    subcategories: [
+      { id: 'sub-1', name: 'Silk Sarees' },
+      { id: 'sub-2', name: 'Cotton Sarees' },
+      { id: 'sub-3', name: 'Georgette Sarees' },
+      { id: 'sub-4', name: 'Banarasi Sarees' },
+    ]
+  },
+  {
+    id: 'cat-2',
+    name: 'Ethnic Wear',
+    subcategories: [
+      { id: 'sub-5', name: 'Anarkali' },
+      { id: 'sub-6', name: 'Kurta Sets' },
+      { id: 'sub-7', name: 'Palazzo Sets' },
+    ]
+  },
+  {
+    id: 'cat-3',
+    name: 'Bridal',
+    subcategories: [
+      { id: 'sub-8', name: 'Lehenga Sets' },
+      { id: 'sub-9', name: 'Bridal Sarees' },
+      { id: 'sub-10', name: 'Wedding Suits' },
+    ]
+  },
+  {
+    id: 'cat-4',
+    name: 'Accessories',
+    subcategories: [
+      { id: 'sub-11', name: 'Dupattas' },
+      { id: 'sub-12', name: 'Stoles' },
+      { id: 'sub-13', name: 'Jewelry' },
+    ]
+  },
+  {
+    id: 'cat-5',
+    name: 'Dress',
+    subcategories: [
+      { id: 'sub-14', name: 'Casual Dresses' },
+      { id: 'sub-15', name: 'Party Dresses' },
+      { id: 'sub-16', name: 'Formal Dresses' },
+    ]
+  },
+];
+
 export const products: Product[] = [
   { id: '1', name: 'Banarasi Silk Saree', category: 'Sarees', price: 12999, stock: 15, storeId: '1', isPublished: true, image: '🥻', sku: 'SS-001', description: 'Handwoven Banarasi silk with gold zari work' },
   { id: '2', name: 'Chanderi Cotton Saree', category: 'Sarees', price: 4999, stock: 28, storeId: '1', isPublished: true, image: '🥻', sku: 'SS-002', description: 'Lightweight Chanderi with subtle motifs' },
@@ -77,30 +126,30 @@ export const products: Product[] = [
 ];
 
 export const orders: Order[] = [
-  { id: 'ORD-2401', customerName: 'Priya Sharma', storeName: 'Silk & Satin Boutique', storeId: '1', total: 17998, status: 'delivered', date: '2024-01-25', items: 2, products: ['Banarasi Silk Saree', 'Chanderi Cotton Saree'] },
+  { id: 'ORD-2401', customerName: 'Priya Sharma', storeName: 'Silk & Satin Store', storeId: '1', total: 17998, status: 'delivered', date: '2024-01-25', items: 2, products: ['Banarasi Silk Saree', 'Chanderi Cotton Saree'] },
   { id: 'ORD-2402', customerName: 'Anjali Mehta', storeName: 'Royal Ethnic Wear', storeId: '2', total: 45999, status: 'curating', date: '2024-01-25', items: 1, products: ['Zardozi Lehenga Set'] },
   { id: 'ORD-2403', customerName: 'Kavita Reddy', storeName: 'Zari & Zardozi', storeId: '3', total: 38998, status: 'received', date: '2024-01-24', items: 2, products: ['Patola Saree', 'Tussar Silk Dupatta'] },
   { id: 'ORD-2404', customerName: 'Sneha Gupta', storeName: 'Heritage Handlooms', storeId: '5', total: 9498, status: 'dispatched', date: '2024-01-24', items: 2, products: ['Silk Kurta Set', 'Ikat Print Dress'] },
-  { id: 'ORD-2405', customerName: 'Ritu Agarwal', storeName: 'Silk & Satin Boutique', storeId: '1', total: 28999, status: 'delivered', date: '2024-01-23', items: 1, products: ['Kanjivaram Saree'] },
+  { id: 'ORD-2405', customerName: 'Ritu Agarwal', storeName: 'Silk & Satin Store', storeId: '1', total: 28999, status: 'delivered', date: '2024-01-23', items: 1, products: ['Kanjivaram Saree'] },
   { id: 'ORD-2406', customerName: 'Deepa Joshi', storeName: 'Royal Ethnic Wear', storeId: '2', total: 13298, status: 'curating', date: '2024-01-23', items: 2, products: ['Embroidered Anarkali', 'Designer Palazzo Set'] },
   { id: 'ORD-2407', customerName: 'Nisha Verma', storeName: 'Zari & Zardozi', storeId: '3', total: 2999, status: 'delivered', date: '2024-01-22', items: 1, products: ['Tussar Silk Dupatta'] },
   { id: 'ORD-2408', customerName: 'Pooja Singh', storeName: 'Heritage Handlooms', storeId: '5', total: 5999, status: 'received', date: '2024-01-22', items: 1, products: ['Silk Kurta Set'] },
 ];
 
 export const templates: Template[] = [
-  { id: '1', name: 'Ivory Elegance', description: 'Clean, minimalist layout with ivory tones', preview: '✨', isActive: true, category: 'minimal' },
-  { id: '2', name: 'Golden Luxe', description: 'Premium design with gold accents throughout', preview: '👑', isActive: false, category: 'classic' },
-  { id: '3', name: 'Rose Garden', description: 'Soft pinks and florals for feminine appeal', preview: '🌸', isActive: false, category: 'modern' },
-  { id: '4', name: 'Regal Heritage', description: 'Traditional motifs with royal aesthetics', preview: '🏰', isActive: false, category: 'classic' },
-  { id: '5', name: 'Modern Minimal', description: 'Contemporary design with bold typography', preview: '◼️', isActive: false, category: 'bold' },
-  { id: '6', name: 'Festive Glow', description: 'Vibrant colors perfect for celebrations', preview: '🎉', isActive: false, category: 'bold' },
+  { id: '1', name: 'Minimal Clean', description: 'Clean, minimalist layout with white tones', preview: '✨', isActive: true, category: 'minimal' },
+  { id: '2', name: 'Classic Elegance', description: 'Premium design with sophisticated accents', preview: '👑', isActive: false, category: 'classic' },
+  { id: '3', name: 'Soft Touch', description: 'Soft colors for feminine appeal', preview: '🌸', isActive: false, category: 'modern' },
+  { id: '4', name: 'Heritage Style', description: 'Traditional motifs with royal aesthetics', preview: '🏰', isActive: false, category: 'classic' },
+  { id: '5', name: 'Modern Bold', description: 'Contemporary design with bold typography', preview: '◼️', isActive: false, category: 'bold' },
+  { id: '6', name: 'Festive Vibes', description: 'Vibrant colors perfect for celebrations', preview: '🎉', isActive: false, category: 'bold' },
 ];
 
 export const homePageRows: HomePageRow[] = [
   { id: '1', type: 'hero_banner', title: 'Hero Banner', isVisible: true, order: 1, config: { bannerImage: '/banner.jpg' } },
   { id: '2', type: 'category_circles', title: 'Shop by Category', isVisible: true, order: 2, config: { categories: ['Sarees', 'Ethnic', 'Bridal', 'Accessories'] } },
   { id: '3', type: 'top_selling', title: 'Top Selling', isVisible: true, order: 3 },
-  { id: '4', type: 'sponsored_brands', title: 'Featured Boutiques', isVisible: true, order: 4, config: { brandIds: ['1', '2', '3'] } },
+  { id: '4', type: 'sponsored_brands', title: 'Featured Stores', isVisible: true, order: 4, config: { brandIds: ['1', '2', '3'] } },
 ];
 
 export const dashboardStats: DashboardStats = {

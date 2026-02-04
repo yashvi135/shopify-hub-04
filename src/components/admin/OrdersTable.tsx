@@ -29,13 +29,13 @@ const statusConfig = {
   received: { 
     label: 'Order Received 💝', 
     icon: Heart,
-    style: 'bg-rose-light text-rose-foreground border-rose/30',
+    style: 'bg-secondary text-foreground border-border',
     shortLabel: 'Received'
   },
   curating: { 
     label: 'Curating Fabric 🧵', 
     icon: Scissors,
-    style: 'bg-gold-light text-gold-foreground border-gold/30',
+    style: 'bg-warning/10 text-warning border-warning/30',
     shortLabel: 'Curating'
   },
   dispatched: { 
@@ -89,10 +89,7 @@ export function OrdersTable() {
             variant={statusFilter === status ? "default" : "outline"}
             size="sm"
             onClick={() => setStatusFilter(status)}
-            className={cn(
-              "gap-2 rounded-2xl",
-              statusFilter === status && "shadow-gold"
-            )}
+            className="gap-2 rounded-2xl"
           >
             <span>{status === 'all' ? 'All Orders' : statusConfig[status].shortLabel}</span>
             <Badge 
@@ -131,18 +128,18 @@ export function OrdersTable() {
       </div>
 
       {/* Orders Table */}
-      <div className="luxury-card overflow-hidden">
+      <div className="modern-card overflow-hidden">
         <Table>
           <TableHeader>
             <TableRow className="hover:bg-transparent">
-              <TableHead className="font-display">Order ID</TableHead>
-              <TableHead className="font-display">Customer</TableHead>
-              {role === 'SUPER_ADMIN' && <TableHead className="font-display">Boutique</TableHead>}
-              <TableHead className="font-display">Date</TableHead>
-              <TableHead className="font-display">Items</TableHead>
-              <TableHead className="font-display">Total</TableHead>
-              <TableHead className="font-display">Status</TableHead>
-              <TableHead className="text-right font-display">Actions</TableHead>
+              <TableHead className="font-semibold">Order ID</TableHead>
+              <TableHead className="font-semibold">Customer</TableHead>
+              {role === 'SUPER_ADMIN' && <TableHead className="font-semibold">Store</TableHead>}
+              <TableHead className="font-semibold">Date</TableHead>
+              <TableHead className="font-semibold">Items</TableHead>
+              <TableHead className="font-semibold">Total</TableHead>
+              <TableHead className="font-semibold">Status</TableHead>
+              <TableHead className="text-right font-semibold">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -155,8 +152,8 @@ export function OrdersTable() {
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-full bg-gradient-to-br from-gold to-rose flex items-center justify-center">
-                        <span className="text-sm font-semibold text-white">
+                      <div className="w-9 h-9 rounded-full bg-primary flex items-center justify-center">
+                        <span className="text-sm font-semibold text-primary-foreground">
                           {order.customerName.charAt(0)}
                         </span>
                       </div>
@@ -168,7 +165,7 @@ export function OrdersTable() {
                   )}
                   <TableCell className="text-muted-foreground">{order.date}</TableCell>
                   <TableCell className="text-muted-foreground">{order.items}</TableCell>
-                  <TableCell className="font-semibold font-display">₹{order.total.toLocaleString()}</TableCell>
+                  <TableCell className="font-semibold">₹{order.total.toLocaleString()}</TableCell>
                   <TableCell>
                     <Badge variant="outline" className={cn("rounded-full", status.style)}>
                       {status.label}

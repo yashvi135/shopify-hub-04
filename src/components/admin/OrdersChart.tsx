@@ -21,11 +21,11 @@ export function OrdersChart() {
   };
 
   return (
-    <Card className="luxury-card animate-fade-in">
+    <Card className="modern-card animate-fade-in">
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle className="font-display">Order Analytics</CardTitle>
+            <CardTitle className="font-semibold">Order Analytics</CardTitle>
             <p className="text-sm text-muted-foreground mt-1">Track your orders and revenue</p>
           </div>
           <div className="flex gap-1 bg-secondary rounded-2xl p-1">
@@ -52,8 +52,8 @@ export function OrdersChart() {
             <AreaChart data={getChartData()} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
               <defs>
                 <linearGradient id="ordersGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="hsl(var(--gold))" stopOpacity={0.4}/>
-                  <stop offset="95%" stopColor="hsl(var(--gold))" stopOpacity={0}/>
+                  <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.4}/>
+                  <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
@@ -78,12 +78,12 @@ export function OrdersChart() {
                   borderRadius: '16px',
                   boxShadow: 'var(--shadow-card)'
                 }}
-                labelStyle={{ color: 'hsl(var(--card-foreground))', fontFamily: 'Playfair Display' }}
+                labelStyle={{ color: 'hsl(var(--card-foreground))' }}
               />
               <Area 
                 type="monotone" 
                 dataKey="orders" 
-                stroke="hsl(var(--gold))" 
+                stroke="hsl(var(--primary))" 
                 strokeWidth={3}
                 fill="url(#ordersGradient)" 
               />
@@ -93,7 +93,7 @@ export function OrdersChart() {
 
         <div className="flex items-center gap-6 mt-4 pt-4 border-t border-border">
           <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full bg-gold" />
+            <div className="w-3 h-3 rounded-full bg-primary" />
             <span className="text-sm text-muted-foreground">Orders</span>
           </div>
         </div>

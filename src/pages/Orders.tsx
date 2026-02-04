@@ -8,11 +8,11 @@ export default function Orders() {
     <div className="space-y-6">
       {/* Page Header */}
       <div>
-        <h1 className="text-3xl font-display font-bold text-foreground">Orders</h1>
+        <h1 className="text-3xl font-bold text-foreground">Orders</h1>
         <p className="text-muted-foreground">
           {role === 'SUPER_ADMIN' 
-            ? 'Track and manage all orders across boutiques'
-            : 'Track orders for your boutique'
+            ? 'Track and manage all orders across stores'
+            : 'Track orders for your store'
           }
         </p>
       </div>

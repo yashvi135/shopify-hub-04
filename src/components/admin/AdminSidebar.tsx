@@ -16,7 +16,6 @@ import { NavLink as RouterNavLink, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useRole } from '@/contexts/RoleContext';
-import { Badge } from '@/components/ui/badge';
 
 interface AdminSidebarProps {
   collapsed: boolean;
@@ -25,7 +24,7 @@ interface AdminSidebarProps {
 
 const superAdminNavItems = [
   { icon: LayoutDashboard, label: 'Dashboard', path: '/' },
-  { icon: Store, label: 'Boutiques', path: '/stores' },
+  { icon: Store, label: 'Stores', path: '/stores' },
   { icon: Package, label: 'Inventory', path: '/inventory' },
   { icon: ShoppingCart, label: 'Orders', path: '/orders' },
   { icon: Palette, label: 'Home Page', path: '/templates' },
@@ -57,11 +56,11 @@ export function AdminSidebar({ collapsed, onToggle }: AdminSidebarProps) {
       <div className="flex items-center justify-between h-16 px-4 border-b border-sidebar-border">
         {!collapsed && (
           <div className="flex items-center gap-2">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-gold to-rose flex items-center justify-center">
-              <span className="text-white font-display font-bold text-lg">S</span>
+            <div className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center">
+              <span className="text-primary-foreground font-bold text-lg">S</span>
             </div>
             <div>
-              <span className="font-display font-bold text-lg block leading-tight">Surat</span>
+              <span className="font-bold text-lg block leading-tight">Surat</span>
               <span className="text-[10px] text-sidebar-muted uppercase tracking-wider">Garment</span>
             </div>
           </div>
@@ -88,7 +87,7 @@ export function AdminSidebar({ collapsed, onToggle }: AdminSidebarProps) {
               className={cn(
                 "flex-1 text-xs h-8 rounded-lg gap-1",
                 role === 'SUPER_ADMIN' 
-                  ? "bg-gold text-white hover:bg-gold/90" 
+                  ? "bg-primary text-primary-foreground hover:bg-primary/90" 
                   : "text-sidebar-muted hover:text-sidebar-foreground"
               )}
             >
@@ -102,7 +101,7 @@ export function AdminSidebar({ collapsed, onToggle }: AdminSidebarProps) {
               className={cn(
                 "flex-1 text-xs h-8 rounded-lg gap-1",
                 role === 'STORE_OWNER' 
-                  ? "bg-rose text-foreground hover:bg-rose/90" 
+                  ? "bg-secondary text-secondary-foreground hover:bg-secondary/90" 
                   : "text-sidebar-muted hover:text-sidebar-foreground"
               )}
             >
@@ -124,7 +123,7 @@ export function AdminSidebar({ collapsed, onToggle }: AdminSidebarProps) {
               className={cn(
                 "flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200",
                 isActive 
-                  ? "bg-gradient-to-r from-gold to-gold/80 text-sidebar-primary-foreground shadow-md" 
+                  ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-md" 
                   : "text-sidebar-muted hover:text-sidebar-foreground hover:bg-sidebar-accent"
               )}
             >
@@ -142,13 +141,13 @@ export function AdminSidebar({ collapsed, onToggle }: AdminSidebarProps) {
             <div className={cn(
               "w-10 h-10 rounded-full flex items-center justify-center",
               role === 'SUPER_ADMIN' 
-                ? "bg-gradient-to-br from-gold to-rose" 
-                : "bg-rose"
+                ? "bg-primary" 
+                : "bg-secondary"
             )}>
               {role === 'SUPER_ADMIN' ? (
-                <Crown className="w-5 h-5 text-white" />
+                <Crown className="w-5 h-5 text-primary-foreground" />
               ) : (
-                <User className="w-5 h-5 text-foreground" />
+                <User className="w-5 h-5 text-secondary-foreground" />
               )}
             </div>
             <div className="flex-1 min-w-0">
@@ -156,7 +155,7 @@ export function AdminSidebar({ collapsed, onToggle }: AdminSidebarProps) {
                 {role === 'SUPER_ADMIN' ? 'Super Admin' : 'Store Owner'}
               </p>
               <p className="text-xs text-sidebar-muted truncate">
-                {role === 'SUPER_ADMIN' ? 'Full Access' : 'Silk & Satin Boutique'}
+                {role === 'SUPER_ADMIN' ? 'Full Access' : 'Silk & Satin Store'}
               </p>
             </div>
           </div>

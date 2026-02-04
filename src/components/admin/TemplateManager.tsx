@@ -22,7 +22,7 @@ const rowTypeConfig: Record<HomePageRowType, { icon: typeof Image; label: string
     icon: Image, 
     label: 'Hero Banner', 
     description: 'Large promotional banner at the top',
-    color: 'bg-gold-light text-gold border-gold/30'
+    color: 'bg-primary/10 text-primary border-primary/30'
   },
   top_selling: { 
     icon: TrendingUp, 
@@ -34,13 +34,13 @@ const rowTypeConfig: Record<HomePageRowType, { icon: typeof Image; label: string
     icon: CircleDot, 
     label: 'Category Circles', 
     description: 'Circular category icons (Saree, Ethnic, Dress)',
-    color: 'bg-rose-light text-rose-foreground border-rose/30'
+    color: 'bg-secondary text-foreground border-border'
   },
   sponsored_brands: { 
     icon: Building2, 
     label: 'Sponsored Brands', 
-    description: 'Featured boutique showcase section',
-    color: 'bg-primary/10 text-primary border-primary/30'
+    description: 'Featured store showcase section',
+    color: 'bg-muted text-muted-foreground border-muted-foreground/30'
   },
 };
 
@@ -107,7 +107,7 @@ export function TemplateManager() {
     <div className="space-y-6 animate-fade-in">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-display font-bold text-foreground">Home Page Configurator</h1>
+          <h1 className="text-2xl font-bold text-foreground">Home Page Configurator</h1>
           <p className="text-muted-foreground">Drag and drop to rearrange the buyer app home page</p>
         </div>
         <div className="flex gap-3">
@@ -115,7 +115,7 @@ export function TemplateManager() {
             <Eye className="w-4 h-4" />
             Preview
           </Button>
-          <Button className="gap-2 rounded-2xl shadow-gold">
+          <Button className="gap-2 rounded-2xl">
             <Plus className="w-4 h-4" />
             Add Row
           </Button>
@@ -126,7 +126,7 @@ export function TemplateManager() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Row List */}
         <div className="space-y-3">
-          <h3 className="font-display font-semibold text-lg mb-4">Layout Rows</h3>
+          <h3 className="font-semibold text-lg mb-4">Layout Rows</h3>
           {rows.map((row, index) => {
             const config = rowTypeConfig[row.type];
             const Icon = config.icon;
@@ -139,7 +139,7 @@ export function TemplateManager() {
                 onDragOver={(e) => handleDragOver(e, row.id)}
                 onDragEnd={handleDragEnd}
                 className={cn(
-                  "luxury-card p-4 cursor-move transition-all duration-200",
+                  "modern-card p-4 cursor-move transition-all duration-200",
                   draggedId === row.id && "opacity-50 scale-[0.98]",
                   !row.isVisible && "opacity-60"
                 )}
@@ -207,12 +207,10 @@ export function TemplateManager() {
               {/* Preview Content */}
               <div className="pt-10 pb-4 px-3 h-full overflow-y-auto space-y-3">
                 {rows.filter(r => r.isVisible).map((row) => {
-                  const config = rowTypeConfig[row.type];
-                  
                   if (row.type === 'hero_banner') {
                     return (
-                      <div key={row.id} className="h-40 rounded-xl bg-gradient-to-r from-gold to-rose flex items-center justify-center">
-                        <span className="text-white font-display font-bold text-lg">Hero Banner</span>
+                      <div key={row.id} className="h-40 rounded-xl bg-gradient-to-r from-primary to-muted-foreground flex items-center justify-center">
+                        <span className="text-primary-foreground font-bold text-lg">Hero Banner</span>
                       </div>
                     );
                   }
@@ -224,7 +222,7 @@ export function TemplateManager() {
                         <div className="flex justify-around">
                           {['🥻', '👗', '👘', '🧣'].map((emoji, i) => (
                             <div key={i} className="flex flex-col items-center gap-1">
-                              <div className="w-12 h-12 rounded-full bg-rose-light flex items-center justify-center text-lg">
+                              <div className="w-12 h-12 rounded-full bg-secondary flex items-center justify-center text-lg">
                                 {emoji}
                               </div>
                               <span className="text-[10px] text-muted-foreground">
@@ -248,7 +246,7 @@ export function TemplateManager() {
                                 🥻
                               </div>
                               <p className="text-[10px] truncate">Silk Saree</p>
-                              <p className="text-[10px] font-bold text-gold">₹4,999</p>
+                              <p className="text-[10px] font-bold">₹4,999</p>
                             </div>
                           ))}
                         </div>
@@ -259,14 +257,14 @@ export function TemplateManager() {
                   if (row.type === 'sponsored_brands') {
                     return (
                       <div key={row.id} className="py-3">
-                        <p className="text-xs font-medium mb-2 px-1">Featured Boutiques</p>
+                        <p className="text-xs font-medium mb-2 px-1">Featured Stores</p>
                         <div className="grid grid-cols-2 gap-2">
                           {[1, 2].map((i) => (
-                            <div key={i} className="rounded-lg bg-gold-light p-3 text-center">
-                              <div className="w-10 h-10 rounded-full bg-gold mx-auto mb-1 flex items-center justify-center">
-                                <Building2 className="w-5 h-5 text-white" />
+                            <div key={i} className="rounded-lg bg-secondary p-3 text-center">
+                              <div className="w-10 h-10 rounded-full bg-primary mx-auto mb-1 flex items-center justify-center">
+                                <Building2 className="w-5 h-5 text-primary-foreground" />
                               </div>
-                              <p className="text-[10px] font-medium">Boutique {i}</p>
+                              <p className="text-[10px] font-medium">Store {i}</p>
                             </div>
                           ))}
                         </div>

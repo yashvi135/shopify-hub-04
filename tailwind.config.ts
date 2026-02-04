@@ -15,7 +15,6 @@ export default {
     extend: {
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],
-        display: ['Playfair Display', 'serif'],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -42,16 +41,6 @@ export default {
         warning: {
           DEFAULT: "hsl(var(--warning))",
           foreground: "hsl(var(--warning-foreground))",
-        },
-        gold: {
-          DEFAULT: "hsl(var(--gold))",
-          foreground: "hsl(var(--gold-foreground))",
-          light: "hsl(var(--gold-light))",
-        },
-        rose: {
-          DEFAULT: "hsl(var(--rose))",
-          foreground: "hsl(var(--rose-foreground))",
-          light: "hsl(var(--rose-light))",
         },
         muted: {
           DEFAULT: "hsl(var(--muted))",
@@ -99,7 +88,6 @@ export default {
         soft: "var(--shadow-soft)",
         card: "var(--shadow-card)",
         elevated: "var(--shadow-elevated)",
-        gold: "var(--shadow-gold)",
       },
       keyframes: {
         "accordion-down": {

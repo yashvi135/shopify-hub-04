@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { stores, products, orders } from '@/data/mockData';
+import { stores } from '@/data/mockData';
 import { Store } from '@/types/admin';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -7,7 +7,7 @@ import { Switch } from '@/components/ui/switch';
 import { Slider } from '@/components/ui/slider';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
-import { MapPin, Package, ShoppingCart, Plus, Settings, TrendingUp, Crown, User, Mail } from 'lucide-react';
+import { MapPin, Package, ShoppingCart, Plus, Settings, TrendingUp, Crown, User } from 'lucide-react';
 import { useRole } from '@/contexts/RoleContext';
 
 export function StoresGrid() {
@@ -34,13 +34,13 @@ export function StoresGrid() {
     <div className="space-y-6 animate-fade-in">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-display font-bold text-foreground">Boutique Management</h1>
-          <p className="text-muted-foreground">Manage all registered boutiques and their limits</p>
+          <h1 className="text-2xl font-bold text-foreground">Store Management</h1>
+          <p className="text-muted-foreground">Manage all registered stores and their limits</p>
         </div>
         {role === 'SUPER_ADMIN' && (
-          <Button className="gap-2 rounded-2xl shadow-gold">
+          <Button className="gap-2 rounded-2xl">
             <Plus className="w-4 h-4" />
-            Add Boutique
+            Add Store
           </Button>
         )}
       </div>
@@ -50,7 +50,7 @@ export function StoresGrid() {
           <div 
             key={store.id}
             className={cn(
-              "luxury-card overflow-hidden",
+              "modern-card overflow-hidden",
               !store.isActive && "opacity-60"
             )}
           >
@@ -59,7 +59,7 @@ export function StoresGrid() {
               <div className="flex items-start justify-between mb-4">
                 <div>
                   <div className="flex items-center gap-2 mb-1">
-                    <h4 className="font-display font-semibold text-lg text-card-foreground">{store.name}</h4>
+                    <h4 className="font-semibold text-lg text-card-foreground">{store.name}</h4>
                   </div>
                   <div className="flex items-center gap-1 text-sm text-muted-foreground">
                     <MapPin className="w-3 h-3" />
@@ -81,8 +81,8 @@ export function StoresGrid() {
 
               {/* Owner Info */}
               <div className="flex items-center gap-3 p-3 bg-secondary/50 rounded-xl">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-gold to-rose flex items-center justify-center">
-                  <User className="w-5 h-5 text-white" />
+                <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center">
+                  <User className="w-5 h-5 text-primary-foreground" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-medium text-sm truncate">{store.ownerName}</p>
@@ -93,13 +93,13 @@ export function StoresGrid() {
 
             {/* Product Limit Section - Super Admin Only */}
             {role === 'SUPER_ADMIN' && (
-              <div className="p-6 border-b border-border bg-gold-light/30">
+              <div className="p-6 border-b border-border bg-secondary/30">
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2">
-                    <Crown className="w-4 h-4 text-gold" />
+                    <Crown className="w-4 h-4 text-foreground" />
                     <span className="text-sm font-medium">Product Limit</span>
                   </div>
-                  <span className="text-sm font-bold text-gold">{store.productLimit}</span>
+                  <span className="text-sm font-bold">{store.productLimit}</span>
                 </div>
                 <Slider
                   value={[store.productLimit]}
@@ -128,21 +128,21 @@ export function StoresGrid() {
                 <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-2">
                   <Package className="w-5 h-5 text-primary" />
                 </div>
-                <p className="text-lg font-display font-bold text-card-foreground">{store.productCount}</p>
+                <p className="text-lg font-bold text-card-foreground">{store.productCount}</p>
                 <p className="text-xs text-muted-foreground">Products</p>
               </div>
               <div className="text-center">
                 <div className="w-11 h-11 rounded-xl bg-success/10 flex items-center justify-center mx-auto mb-2">
                   <ShoppingCart className="w-5 h-5 text-success" />
                 </div>
-                <p className="text-lg font-display font-bold text-card-foreground">{store.totalOrders}</p>
+                <p className="text-lg font-bold text-card-foreground">{store.totalOrders}</p>
                 <p className="text-xs text-muted-foreground">Orders</p>
               </div>
               <div className="text-center">
-                <div className="w-11 h-11 rounded-xl bg-gold-light flex items-center justify-center mx-auto mb-2">
-                  <TrendingUp className="w-5 h-5 text-gold" />
+                <div className="w-11 h-11 rounded-xl bg-secondary flex items-center justify-center mx-auto mb-2">
+                  <TrendingUp className="w-5 h-5 text-foreground" />
                 </div>
-                <p className="text-lg font-display font-bold text-card-foreground">₹{(store.revenue / 100000).toFixed(1)}L</p>
+                <p className="text-lg font-bold text-card-foreground">₹{(store.revenue / 100000).toFixed(1)}L</p>
                 <p className="text-xs text-muted-foreground">Revenue</p>
               </div>
             </div>
