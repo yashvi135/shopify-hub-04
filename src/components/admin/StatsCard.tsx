@@ -7,9 +7,10 @@ interface StatsCardProps {
   change?: number;
   icon: LucideIcon;
   trend?: 'up' | 'down';
+  variant?: 'default' | 'warning';
 }
 
-export function StatsCard({ title, value, change, icon: Icon, trend }: StatsCardProps) {
+export function StatsCard({ title, value, change, icon: Icon, trend, variant = 'default' }: StatsCardProps) {
   return (
     <div className="modern-card p-6 animate-fade-in">
       <div className="flex items-start justify-between">
@@ -31,8 +32,11 @@ export function StatsCard({ title, value, change, icon: Icon, trend }: StatsCard
             </div>
           )}
         </div>
-        <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center">
-          <Icon className="w-7 h-7 text-primary" />
+        <div className={cn(
+          "w-14 h-14 rounded-2xl flex items-center justify-center",
+          variant === 'warning' ? "bg-warning/10" : "bg-primary/10"
+        )}>
+          <Icon className={cn("w-7 h-7", variant === 'warning' ? "text-warning" : "text-primary")} />
         </div>
       </div>
     </div>

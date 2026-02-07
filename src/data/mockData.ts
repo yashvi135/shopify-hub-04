@@ -1,72 +1,8 @@
-import { Store, Product, Order, Template, DashboardStats, ChartData, HomePageRow, CategoryStats } from '@/types/admin';
+import { Product, Category, Order, Coupon, Banner, StoreSettings, DashboardStats, ChartData, PaymentOverview } from '@/types/admin';
 
-export const stores: Store[] = [
-  { 
-    id: '1', 
-    name: 'Silk & Satin Store', 
-    location: 'Ring Road, Surat', 
-    isActive: true, 
-    productLimit: 50, 
-    productCount: 32,
-    ownerName: 'Meera Patel',
-    ownerEmail: 'meera@silksatin.in',
-    revenue: 1250000,
-    totalOrders: 156
-  },
-  { 
-    id: '2', 
-    name: 'Royal Ethnic Wear', 
-    location: 'Varachha Road, Surat', 
-    isActive: true, 
-    productLimit: 100, 
-    productCount: 78,
-    ownerName: 'Raj Sharma',
-    ownerEmail: 'raj@royalethnic.in',
-    revenue: 2340000,
-    totalOrders: 289
-  },
-  { 
-    id: '3', 
-    name: 'Zari & Zardozi', 
-    location: 'Textile Market, Surat', 
-    isActive: true, 
-    productLimit: 75, 
-    productCount: 45,
-    ownerName: 'Fatima Khan',
-    ownerEmail: 'fatima@zarizardozi.in',
-    revenue: 1890000,
-    totalOrders: 198
-  },
-  { 
-    id: '4', 
-    name: 'Modern Drapes', 
-    location: 'Adajan, Surat', 
-    isActive: false, 
-    productLimit: 30, 
-    productCount: 12,
-    ownerName: 'Priya Desai',
-    ownerEmail: 'priya@moderndrapes.in',
-    revenue: 450000,
-    totalOrders: 67
-  },
-  { 
-    id: '5', 
-    name: 'Heritage Handlooms', 
-    location: 'Katargam, Surat', 
-    isActive: true, 
-    productLimit: 60, 
-    productCount: 58,
-    ownerName: 'Arjun Nair',
-    ownerEmail: 'arjun@heritagehandlooms.in',
-    revenue: 1780000,
-    totalOrders: 234
-  },
-];
-
-export const categories = [
+export const categories: Category[] = [
   {
-    id: 'cat-1',
-    name: 'Sarees',
+    id: 'cat-1', name: 'Sarees', bannerImage: '🥻',
     subcategories: [
       { id: 'sub-1', name: 'Silk Sarees' },
       { id: 'sub-2', name: 'Cotton Sarees' },
@@ -75,8 +11,7 @@ export const categories = [
     ]
   },
   {
-    id: 'cat-2',
-    name: 'Ethnic Wear',
+    id: 'cat-2', name: 'Ethnic Wear', bannerImage: '👗',
     subcategories: [
       { id: 'sub-5', name: 'Anarkali' },
       { id: 'sub-6', name: 'Kurta Sets' },
@@ -84,8 +19,7 @@ export const categories = [
     ]
   },
   {
-    id: 'cat-3',
-    name: 'Bridal',
+    id: 'cat-3', name: 'Bridal', bannerImage: '👰',
     subcategories: [
       { id: 'sub-8', name: 'Lehenga Sets' },
       { id: 'sub-9', name: 'Bridal Sarees' },
@@ -93,8 +27,7 @@ export const categories = [
     ]
   },
   {
-    id: 'cat-4',
-    name: 'Accessories',
+    id: 'cat-4', name: 'Accessories', bannerImage: '🧣',
     subcategories: [
       { id: 'sub-11', name: 'Dupattas' },
       { id: 'sub-12', name: 'Stoles' },
@@ -102,8 +35,7 @@ export const categories = [
     ]
   },
   {
-    id: 'cat-5',
-    name: 'Dress',
+    id: 'cat-5', name: 'Dress', bannerImage: '👗',
     subcategories: [
       { id: 'sub-14', name: 'Casual Dresses' },
       { id: 'sub-15', name: 'Party Dresses' },
@@ -113,83 +45,72 @@ export const categories = [
 ];
 
 export const products: Product[] = [
-  { id: '1', name: 'Banarasi Silk Saree', category: 'Sarees', price: 12999, stock: 15, storeId: '1', isPublished: true, image: '🥻', sku: 'SS-001', description: 'Handwoven Banarasi silk with gold zari work' },
-  { id: '2', name: 'Chanderi Cotton Saree', category: 'Sarees', price: 4999, stock: 28, storeId: '1', isPublished: true, image: '🥻', sku: 'SS-002', description: 'Lightweight Chanderi with subtle motifs' },
-  { id: '3', name: 'Embroidered Anarkali', category: 'Ethnic', price: 8999, stock: 12, storeId: '2', isPublished: true, image: '👗', sku: 'RE-001', description: 'Floor-length Anarkali with intricate embroidery' },
-  { id: '4', name: 'Zardozi Lehenga Set', category: 'Bridal', price: 45999, stock: 5, storeId: '2', isPublished: true, image: '👗', sku: 'RE-002', description: 'Heavy bridal lehenga with zardozi work' },
-  { id: '5', name: 'Tussar Silk Dupatta', category: 'Accessories', price: 2999, stock: 35, storeId: '3', isPublished: true, image: '🧣', sku: 'ZZ-001', description: 'Pure Tussar silk with hand-painted motifs' },
-  { id: '6', name: 'Patola Saree', category: 'Sarees', price: 35999, stock: 3, storeId: '3', isPublished: false, image: '🥻', sku: 'ZZ-002', description: 'Authentic Patan Patola double ikat saree' },
-  { id: '7', name: 'Silk Kurta Set', category: 'Ethnic', price: 5999, stock: 22, storeId: '5', isPublished: true, image: '👘', sku: 'HH-001', description: 'Pure silk kurta with handloom finish' },
-  { id: '8', name: 'Ikat Print Dress', category: 'Dress', price: 3499, stock: 18, storeId: '5', isPublished: true, image: '👗', sku: 'HH-002', description: 'Contemporary ikat printed cotton dress' },
-  { id: '9', name: 'Kanjivaram Saree', category: 'Sarees', price: 28999, stock: 0, storeId: '1', isPublished: true, image: '🥻', sku: 'SS-003', description: 'Traditional Kanjivaram with temple border' },
-  { id: '10', name: 'Designer Palazzo Set', category: 'Ethnic', price: 4299, stock: 30, storeId: '2', isPublished: true, image: '👘', sku: 'RE-003', description: 'Flowy palazzo with printed kurta' },
+  { id: '1', name: 'Banarasi Silk Saree', categoryId: 'cat-1', subcategoryId: 'sub-1', description: 'Handwoven Banarasi silk with gold zari work', fabric: 'Pure Silk', sku: 'SG-001', images: ['🥻'], basePrice: 14999, discountPercent: 13, finalPrice: 12999, stock: 15, sizeVariants: ['Free Size'], colorVariants: ['Red', 'Gold', 'Maroon'], isPublished: true },
+  { id: '2', name: 'Chanderi Cotton Saree', categoryId: 'cat-1', subcategoryId: 'sub-2', description: 'Lightweight Chanderi with subtle motifs', fabric: 'Cotton', sku: 'SG-002', images: ['🥻'], basePrice: 5499, discountPercent: 9, finalPrice: 4999, stock: 28, sizeVariants: ['Free Size'], colorVariants: ['White', 'Blue', 'Green'], isPublished: true },
+  { id: '3', name: 'Embroidered Anarkali', categoryId: 'cat-2', subcategoryId: 'sub-5', description: 'Floor-length Anarkali with intricate embroidery', fabric: 'Georgette', sku: 'SG-003', images: ['👗'], basePrice: 9999, discountPercent: 10, finalPrice: 8999, stock: 12, sizeVariants: ['S', 'M', 'L', 'XL'], colorVariants: ['Navy', 'Wine', 'Black'], isPublished: true },
+  { id: '4', name: 'Zardozi Lehenga Set', categoryId: 'cat-3', subcategoryId: 'sub-8', description: 'Heavy bridal lehenga with zardozi work', fabric: 'Velvet', sku: 'SG-004', images: ['👗'], basePrice: 49999, discountPercent: 8, finalPrice: 45999, stock: 5, sizeVariants: ['S', 'M', 'L'], colorVariants: ['Red', 'Pink'], isPublished: true },
+  { id: '5', name: 'Tussar Silk Dupatta', categoryId: 'cat-4', subcategoryId: 'sub-11', description: 'Pure Tussar silk with hand-painted motifs', fabric: 'Tussar Silk', sku: 'SG-005', images: ['🧣'], basePrice: 3499, discountPercent: 14, finalPrice: 2999, stock: 35, sizeVariants: ['Free Size'], colorVariants: ['Beige', 'Yellow'], isPublished: true },
+  { id: '6', name: 'Patola Saree', categoryId: 'cat-1', subcategoryId: 'sub-1', description: 'Authentic Patan Patola double ikat saree', fabric: 'Pure Silk', sku: 'SG-006', images: ['🥻'], basePrice: 39999, discountPercent: 10, finalPrice: 35999, stock: 3, sizeVariants: ['Free Size'], colorVariants: ['Red', 'Green'], isPublished: false },
+  { id: '7', name: 'Silk Kurta Set', categoryId: 'cat-2', subcategoryId: 'sub-6', description: 'Pure silk kurta with handloom finish', fabric: 'Silk', sku: 'SG-007', images: ['👘'], basePrice: 6999, discountPercent: 14, finalPrice: 5999, stock: 22, sizeVariants: ['S', 'M', 'L', 'XL'], colorVariants: ['White', 'Cream'], isPublished: true },
+  { id: '8', name: 'Ikat Print Dress', categoryId: 'cat-5', subcategoryId: 'sub-14', description: 'Contemporary ikat printed cotton dress', fabric: 'Cotton', sku: 'SG-008', images: ['👗'], basePrice: 3999, discountPercent: 12, finalPrice: 3499, stock: 18, sizeVariants: ['S', 'M', 'L', 'XL'], colorVariants: ['Blue', 'Brown'], isPublished: true },
+  { id: '9', name: 'Kanjivaram Saree', categoryId: 'cat-1', subcategoryId: 'sub-1', description: 'Traditional Kanjivaram with temple border', fabric: 'Pure Silk', sku: 'SG-009', images: ['🥻'], basePrice: 32999, discountPercent: 12, finalPrice: 28999, stock: 0, sizeVariants: ['Free Size'], colorVariants: ['Purple', 'Gold'], isPublished: true },
+  { id: '10', name: 'Designer Palazzo Set', categoryId: 'cat-2', subcategoryId: 'sub-7', description: 'Flowy palazzo with printed kurta', fabric: 'Rayon', sku: 'SG-010', images: ['👘'], basePrice: 4999, discountPercent: 14, finalPrice: 4299, stock: 30, sizeVariants: ['S', 'M', 'L', 'XL'], colorVariants: ['Teal', 'Mustard', 'Pink'], isPublished: true },
 ];
 
 export const orders: Order[] = [
-  { id: 'ORD-2401', customerName: 'Priya Sharma', storeName: 'Silk & Satin Store', storeId: '1', total: 17998, status: 'delivered', date: '2024-01-25', items: 2, products: ['Banarasi Silk Saree', 'Chanderi Cotton Saree'] },
-  { id: 'ORD-2402', customerName: 'Anjali Mehta', storeName: 'Royal Ethnic Wear', storeId: '2', total: 45999, status: 'curating', date: '2024-01-25', items: 1, products: ['Zardozi Lehenga Set'] },
-  { id: 'ORD-2403', customerName: 'Kavita Reddy', storeName: 'Zari & Zardozi', storeId: '3', total: 38998, status: 'received', date: '2024-01-24', items: 2, products: ['Patola Saree', 'Tussar Silk Dupatta'] },
-  { id: 'ORD-2404', customerName: 'Sneha Gupta', storeName: 'Heritage Handlooms', storeId: '5', total: 9498, status: 'dispatched', date: '2024-01-24', items: 2, products: ['Silk Kurta Set', 'Ikat Print Dress'] },
-  { id: 'ORD-2405', customerName: 'Ritu Agarwal', storeName: 'Silk & Satin Store', storeId: '1', total: 28999, status: 'delivered', date: '2024-01-23', items: 1, products: ['Kanjivaram Saree'] },
-  { id: 'ORD-2406', customerName: 'Deepa Joshi', storeName: 'Royal Ethnic Wear', storeId: '2', total: 13298, status: 'curating', date: '2024-01-23', items: 2, products: ['Embroidered Anarkali', 'Designer Palazzo Set'] },
-  { id: 'ORD-2407', customerName: 'Nisha Verma', storeName: 'Zari & Zardozi', storeId: '3', total: 2999, status: 'delivered', date: '2024-01-22', items: 1, products: ['Tussar Silk Dupatta'] },
-  { id: 'ORD-2408', customerName: 'Pooja Singh', storeName: 'Heritage Handlooms', storeId: '5', total: 5999, status: 'received', date: '2024-01-22', items: 1, products: ['Silk Kurta Set'] },
+  { id: 'ORD-2401', customerName: 'Priya Sharma', address: '45 Ring Road, Surat, Gujarat', products: [{ name: 'Banarasi Silk Saree', quantity: 1, price: 12999 }, { name: 'Chanderi Cotton Saree', quantity: 1, price: 4999 }], totalAmount: 17998, paymentMethod: 'Online', paymentStatus: 'paid', status: 'delivered', date: '2024-01-25' },
+  { id: 'ORD-2402', customerName: 'Anjali Mehta', address: '12 Varachha Rd, Surat, Gujarat', products: [{ name: 'Zardozi Lehenga Set', quantity: 1, price: 45999 }], totalAmount: 45999, paymentMethod: 'Online', paymentStatus: 'paid', status: 'packed', date: '2024-01-25' },
+  { id: 'ORD-2403', customerName: 'Kavita Reddy', address: '78 Textile Market, Surat, Gujarat', products: [{ name: 'Patola Saree', quantity: 1, price: 35999 }, { name: 'Tussar Silk Dupatta', quantity: 1, price: 2999 }], totalAmount: 38998, paymentMethod: 'COD', paymentStatus: 'pending', status: 'received', date: '2024-01-24' },
+  { id: 'ORD-2404', customerName: 'Sneha Gupta', address: '23 Adajan, Surat, Gujarat', products: [{ name: 'Silk Kurta Set', quantity: 1, price: 5999 }, { name: 'Ikat Print Dress', quantity: 1, price: 3499 }], totalAmount: 9498, paymentMethod: 'Online', paymentStatus: 'paid', status: 'dispatched', date: '2024-01-24' },
+  { id: 'ORD-2405', customerName: 'Ritu Agarwal', address: '56 Katargam, Surat, Gujarat', products: [{ name: 'Kanjivaram Saree', quantity: 1, price: 28999 }], totalAmount: 28999, paymentMethod: 'Online', paymentStatus: 'paid', status: 'delivered', date: '2024-01-23' },
+  { id: 'ORD-2406', customerName: 'Deepa Joshi', address: '89 Udhna, Surat, Gujarat', products: [{ name: 'Embroidered Anarkali', quantity: 1, price: 8999 }, { name: 'Designer Palazzo Set', quantity: 1, price: 4299 }], totalAmount: 13298, paymentMethod: 'COD', paymentStatus: 'pending', status: 'packed', date: '2024-01-23' },
+  { id: 'ORD-2407', customerName: 'Nisha Verma', address: '34 Piplod, Surat, Gujarat', products: [{ name: 'Tussar Silk Dupatta', quantity: 1, price: 2999 }], totalAmount: 2999, paymentMethod: 'Online', paymentStatus: 'paid', status: 'delivered', date: '2024-01-22' },
+  { id: 'ORD-2408', customerName: 'Pooja Singh', address: '67 Vesu, Surat, Gujarat', products: [{ name: 'Silk Kurta Set', quantity: 1, price: 5999 }], totalAmount: 5999, paymentMethod: 'COD', paymentStatus: 'pending', status: 'received', date: '2024-01-22' },
 ];
 
-export const templates: Template[] = [
-  { id: '1', name: 'Minimal Clean', description: 'Clean, minimalist layout with white tones', preview: '✨', isActive: true, category: 'minimal' },
-  { id: '2', name: 'Classic Elegance', description: 'Premium design with sophisticated accents', preview: '👑', isActive: false, category: 'classic' },
-  { id: '3', name: 'Soft Touch', description: 'Soft colors for feminine appeal', preview: '🌸', isActive: false, category: 'modern' },
-  { id: '4', name: 'Heritage Style', description: 'Traditional motifs with royal aesthetics', preview: '🏰', isActive: false, category: 'classic' },
-  { id: '5', name: 'Modern Bold', description: 'Contemporary design with bold typography', preview: '◼️', isActive: false, category: 'bold' },
-  { id: '6', name: 'Festive Vibes', description: 'Vibrant colors perfect for celebrations', preview: '🎉', isActive: false, category: 'bold' },
+export const coupons: Coupon[] = [
+  { id: '1', code: 'FIRST20', discountType: 'percentage', discountValue: 20, applyOn: 'store', productIds: [], expiryDate: '2024-03-31', isActive: true },
+  { id: '2', code: 'SILK500', discountType: 'flat', discountValue: 500, applyOn: 'product', productIds: ['1', '6', '9'], expiryDate: '2024-02-28', isActive: true },
+  { id: '3', code: 'BRIDAL10', discountType: 'percentage', discountValue: 10, applyOn: 'product', productIds: ['4'], expiryDate: '2024-04-30', isActive: false },
 ];
 
-export const homePageRows: HomePageRow[] = [
-  { id: '1', type: 'hero_banner', title: 'Hero Banner', isVisible: true, order: 1, config: { bannerImage: '/banner.jpg' } },
-  { id: '2', type: 'category_circles', title: 'Shop by Category', isVisible: true, order: 2, config: { categories: ['Sarees', 'Ethnic', 'Bridal', 'Accessories'] } },
-  { id: '3', type: 'top_selling', title: 'Top Selling', isVisible: true, order: 3 },
-  { id: '4', type: 'sponsored_brands', title: 'Featured Stores', isVisible: true, order: 4, config: { brandIds: ['1', '2', '3'] } },
+export const banners: Banner[] = [
+  { id: '1', image: '🎉', title: 'New Year Sale', subtitle: 'Upto 50% off on Silk Sarees', redirectTo: 'category', redirectId: 'cat-1', isActive: true, order: 1 },
+  { id: '2', image: '👰', title: 'Bridal Collection', subtitle: 'Explore our exclusive bridal range', redirectTo: 'category', redirectId: 'cat-3', isActive: true, order: 2 },
+  { id: '3', image: '🥻', title: 'Patola Special', subtitle: 'Handcrafted Patola Sarees', redirectTo: 'product', redirectId: '6', isActive: false, order: 3 },
 ];
+
+export const storeSettings: StoreSettings = {
+  storeName: 'Surat Garment',
+  logo: '👗',
+  gstNumber: '24AABCS1234F1Z5',
+  contactEmail: 'info@suratgarment.in',
+  contactPhone: '+91 98765 43210',
+  shippingCharges: 99,
+  freeShippingAbove: 999,
+  codEnabled: true,
+  gstPercent: 5,
+};
 
 export const dashboardStats: DashboardStats = {
   totalOrders: 944,
   totalRevenue: 7710000,
   totalProducts: 225,
-  activeStores: 4,
-  orderChange: 15.8,
-  revenueChange: 12.3,
+  lowStockProducts: 8,
 };
 
-export const categoryStats: CategoryStats[] = [
-  { name: 'Silk Sarees', count: 89, revenue: 2890000 },
-  { name: 'Ethnic Wear', count: 67, revenue: 1560000 },
-  { name: 'Bridal Collection', count: 23, revenue: 1890000 },
-  { name: 'Cotton Sarees', count: 45, revenue: 890000 },
-];
-
-export const dailyChartData: ChartData[] = [
-  { name: 'Mon', orders: 32, revenue: 185000 },
-  { name: 'Tue', orders: 45, revenue: 245000 },
-  { name: 'Wed', orders: 38, revenue: 198000 },
-  { name: 'Thu', orders: 52, revenue: 312000 },
-  { name: 'Fri', orders: 68, revenue: 425000 },
-  { name: 'Sat', orders: 85, revenue: 565000 },
-  { name: 'Sun', orders: 48, revenue: 295000 },
-];
-
-export const weeklyChartData: ChartData[] = [
-  { name: 'Week 1', orders: 245, revenue: 1450000 },
-  { name: 'Week 2', orders: 312, revenue: 1890000 },
-  { name: 'Week 3', orders: 287, revenue: 1680000 },
-  { name: 'Week 4', orders: 356, revenue: 2150000 },
-];
-
 export const monthlyChartData: ChartData[] = [
-  { name: 'Aug', orders: 756, revenue: 4250000 },
-  { name: 'Sep', orders: 823, revenue: 4890000 },
-  { name: 'Oct', orders: 945, revenue: 5780000 },
-  { name: 'Nov', orders: 1234, revenue: 7890000 },
-  { name: 'Dec', orders: 1567, revenue: 9450000 },
-  { name: 'Jan', orders: 944, revenue: 7710000 },
+  { name: 'Aug', revenue: 4250000 },
+  { name: 'Sep', revenue: 4890000 },
+  { name: 'Oct', revenue: 5780000 },
+  { name: 'Nov', revenue: 7890000 },
+  { name: 'Dec', revenue: 9450000 },
+  { name: 'Jan', revenue: 7710000 },
 ];
+
+export const paymentOverview: PaymentOverview = {
+  totalSales: 7710000,
+  codAmount: 2150000,
+  onlineAmount: 5560000,
+  pendingPayments: 860000,
+};
