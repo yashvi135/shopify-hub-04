@@ -35,35 +35,42 @@ export function AdminSidebar({ collapsed, onToggle }: AdminSidebarProps) {
   return (
     <aside 
       className={cn(
-        "fixed left-0 top-0 h-screen bg-sidebar text-sidebar-foreground transition-all duration-300 z-50 flex flex-col",
-        collapsed ? "w-16" : "w-64"
+        "fixed left-0 top-0 h-screen bg-gradient-to-b from-sidebar to-[hsl(215,28%,13%)] text-sidebar-foreground transition-all duration-300 z-50 flex flex-col",
+        collapsed ? "w-20" : "w-[260px]"
       )}
     >
       {/* Logo */}
       <div className="flex items-center justify-between h-16 px-4 border-b border-sidebar-border">
         {!collapsed && (
-          <div className="flex items-center gap-2">
-            <div className="w-9 h-9 rounded-xl gradient-primary flex items-center justify-center">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-lg gradient-primary flex items-center justify-center">
               <span className="text-primary-foreground font-bold text-lg">S</span>
             </div>
             <div>
-              <span className="font-bold text-lg block leading-tight">Surat</span>
-              <span className="text-[10px] text-sidebar-muted uppercase tracking-wider">Garment</span>
+              <span className="font-semibold text-base block leading-tight">Surat Garment</span>
+              <span className="text-[10px] text-sidebar-muted uppercase tracking-wider">Admin Panel</span>
             </div>
           </div>
         )}
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={onToggle}
-          className="text-sidebar-muted hover:text-sidebar-foreground hover:bg-sidebar-accent"
-        >
-          {collapsed ? <ChevronRight className="w-5 h-5" /> : <ChevronLeft className="w-5 h-5" />}
-        </Button>
+        {collapsed && (
+          <div className="w-9 h-9 rounded-lg gradient-primary flex items-center justify-center mx-auto">
+            <span className="text-primary-foreground font-bold text-lg">S</span>
+          </div>
+        )}
       </div>
 
+      {/* Toggle */}
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={onToggle}
+        className="absolute -right-3 top-20 w-6 h-6 rounded-full bg-card border border-border shadow-sm text-foreground hover:bg-secondary z-50"
+      >
+        {collapsed ? <ChevronRight className="w-3 h-3" /> : <ChevronLeft className="w-3 h-3" />}
+      </Button>
+
       {/* Navigation */}
-      <nav className="flex-1 py-4 px-2 space-y-1 overflow-y-auto">
+      <nav className="flex-1 py-4 px-3 space-y-1 overflow-y-auto">
         {navItems.map((item) => {
           const isActive = location.pathname === item.path;
           return (
@@ -71,14 +78,14 @@ export function AdminSidebar({ collapsed, onToggle }: AdminSidebarProps) {
               key={item.path}
               to={item.path}
               className={cn(
-                "flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200",
+                "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group",
                 isActive 
-                  ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-md" 
+                  ? "gradient-primary text-white shadow-lg shadow-primary/25" 
                   : "text-sidebar-muted hover:text-sidebar-foreground hover:bg-sidebar-accent"
               )}
             >
               <item.icon className={cn("w-5 h-5 shrink-0", collapsed && "mx-auto")} />
-              {!collapsed && <span className="font-medium">{item.label}</span>}
+              {!collapsed && <span className="font-medium text-sm">{item.label}</span>}
             </RouterNavLink>
           );
         })}
@@ -86,9 +93,9 @@ export function AdminSidebar({ collapsed, onToggle }: AdminSidebarProps) {
 
       {/* Admin Info */}
       {!collapsed && (
-        <div className="px-4 py-3 border-t border-sidebar-border">
-          <div className="flex items-center gap-3 p-3 rounded-xl bg-sidebar-accent">
-            <div className="w-10 h-10 rounded-full gradient-primary flex items-center justify-center">
+        <div className="px-3 py-3 border-t border-sidebar-border">
+          <div className="flex items-center gap-3 p-2.5 rounded-lg bg-sidebar-accent">
+            <div className="w-9 h-9 rounded-full gradient-primary flex items-center justify-center">
               <span className="text-primary-foreground font-semibold text-sm">A</span>
             </div>
             <div className="flex-1 min-w-0">
@@ -103,11 +110,11 @@ export function AdminSidebar({ collapsed, onToggle }: AdminSidebarProps) {
       <div className="p-3 border-t border-sidebar-border">
         <button 
           className={cn(
-            "flex items-center gap-3 px-3 py-2.5 rounded-xl w-full text-sidebar-muted hover:text-sidebar-foreground hover:bg-sidebar-accent transition-all duration-200"
+            "flex items-center gap-3 px-3 py-2.5 rounded-lg w-full text-sidebar-muted hover:text-sidebar-foreground hover:bg-sidebar-accent transition-all duration-200"
           )}
         >
           <LogOut className={cn("w-5 h-5 shrink-0", collapsed && "mx-auto")} />
-          {!collapsed && <span className="font-medium">Logout</span>}
+          {!collapsed && <span className="font-medium text-sm">Logout</span>}
         </button>
       </div>
     </aside>

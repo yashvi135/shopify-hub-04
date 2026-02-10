@@ -7,36 +7,31 @@ interface StatsCardProps {
   change?: number;
   icon: LucideIcon;
   trend?: 'up' | 'down';
-  variant?: 'default' | 'warning';
+  iconColor?: string;
+  iconBg?: string;
+  subtitle?: string;
 }
 
-export function StatsCard({ title, value, change, icon: Icon, trend, variant = 'default' }: StatsCardProps) {
+export function StatsCard({ title, value, change, icon: Icon, trend, iconColor = 'text-primary', iconBg = 'bg-primary/10', subtitle }: StatsCardProps) {
   return (
     <div className="modern-card p-6 animate-fade-in">
       <div className="flex items-start justify-between">
-        <div>
+        <div className="flex-1">
           <p className="text-sm font-medium text-muted-foreground">{title}</p>
-          <p className="text-3xl font-bold text-card-foreground mt-2">{value}</p>
+          <p className="text-3xl font-bold text-foreground mt-2">{value}</p>
           {change !== undefined && (
             <div className={cn(
-              "flex items-center gap-1 mt-3 text-sm font-medium",
+              "flex items-center gap-1 mt-2 text-sm font-medium",
               trend === 'up' ? "text-success" : "text-destructive"
             )}>
-              {trend === 'up' ? (
-                <TrendingUp className="w-4 h-4" />
-              ) : (
-                <TrendingDown className="w-4 h-4" />
-              )}
-              <span>{Math.abs(change)}%</span>
-              <span className="text-muted-foreground font-normal">vs last period</span>
+              {trend === 'up' ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
+              <span>{Math.abs(change)}% from last month</span>
             </div>
           )}
+          {subtitle && <p className="text-xs text-muted-foreground mt-1">{subtitle}</p>}
         </div>
-        <div className={cn(
-          "w-14 h-14 rounded-2xl flex items-center justify-center",
-          variant === 'warning' ? "bg-warning/10" : "bg-primary/10"
-        )}>
-          <Icon className={cn("w-7 h-7", variant === 'warning' ? "text-warning" : "text-primary")} />
+        <div className={cn("w-12 h-12 rounded-xl flex items-center justify-center", iconBg)}>
+          <Icon className={cn("w-6 h-6", iconColor)} />
         </div>
       </div>
     </div>

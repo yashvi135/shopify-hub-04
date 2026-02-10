@@ -5,8 +5,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { Store, Truck, Receipt } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
+import { Store, Truck, Receipt, Bell, Shield, Upload } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 export default function Settings() {
   const [settings, setSettings] = useState<StoreSettings>(initial);
@@ -17,106 +20,217 @@ export default function Settings() {
   };
 
   const save = () => {
-    toast({ title: 'Settings saved', description: 'Your store settings have been updated.' });
+    toast({ title: 'Settings saved', description: 'Your store settings have been updated successfully.' });
   };
 
   return (
-    <div className="space-y-6 max-w-4xl">
+    <div className="space-y-6 max-w-5xl">
       <div>
-        <h1 className="text-3xl font-bold text-foreground">Settings</h1>
-        <p className="text-muted-foreground">Manage your store configuration</p>
+        <h1 className="text-2xl font-bold text-foreground">Settings</h1>
+        <p className="text-sm text-muted-foreground">Manage your store configuration</p>
       </div>
 
-      {/* Store Details */}
-      <div className="modern-card p-6 animate-fade-in">
-        <div className="flex items-center gap-3 mb-6">
-          <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-            <Store className="w-5 h-5 text-primary" />
-          </div>
-          <div>
-            <h3 className="font-semibold text-foreground">Store Details</h3>
-            <p className="text-sm text-muted-foreground">Basic store information</p>
-          </div>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label>Store Name</Label>
-            <Input value={settings.storeName} onChange={e => update('storeName', e.target.value)} className="rounded-xl" />
-          </div>
-          <div className="space-y-2">
-            <Label>GST Number</Label>
-            <Input value={settings.gstNumber} onChange={e => update('gstNumber', e.target.value)} className="rounded-xl" />
-          </div>
-          <div className="space-y-2">
-            <Label>Contact Email</Label>
-            <Input type="email" value={settings.contactEmail} onChange={e => update('contactEmail', e.target.value)} className="rounded-xl" />
-          </div>
-          <div className="space-y-2">
-            <Label>Contact Phone</Label>
-            <Input value={settings.contactPhone} onChange={e => update('contactPhone', e.target.value)} className="rounded-xl" />
-          </div>
-          <div className="space-y-2 md:col-span-2">
-            <Label>Logo</Label>
-            <div className="flex items-center gap-4">
-              <div className="w-16 h-16 rounded-2xl bg-secondary flex items-center justify-center text-3xl">{settings.logo}</div>
-              <Button variant="outline" className="rounded-xl">Upload Logo</Button>
-            </div>
-          </div>
-        </div>
-      </div>
+      <Tabs defaultValue="store" className="space-y-6">
+        <TabsList>
+          <TabsTrigger value="store" className="gap-1.5"><Store className="w-4 h-4" /> Store Details</TabsTrigger>
+          <TabsTrigger value="shipping" className="gap-1.5"><Truck className="w-4 h-4" /> Shipping</TabsTrigger>
+          <TabsTrigger value="tax" className="gap-1.5"><Receipt className="w-4 h-4" /> GST & Tax</TabsTrigger>
+          <TabsTrigger value="notifications" className="gap-1.5"><Bell className="w-4 h-4" /> Notifications</TabsTrigger>
+        </TabsList>
 
-      {/* Shipping Settings */}
-      <div className="modern-card p-6 animate-fade-in">
-        <div className="flex items-center gap-3 mb-6">
-          <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center">
-            <Truck className="w-5 h-5 text-accent" />
-          </div>
-          <div>
-            <h3 className="font-semibold text-foreground">Shipping Settings</h3>
-            <p className="text-sm text-muted-foreground">Configure delivery options</p>
-          </div>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label>Shipping Charges (₹)</Label>
-            <Input type="number" value={settings.shippingCharges} onChange={e => update('shippingCharges', Number(e.target.value))} className="rounded-xl" />
-          </div>
-          <div className="space-y-2">
-            <Label>Free Shipping Above (₹)</Label>
-            <Input type="number" value={settings.freeShippingAbove} onChange={e => update('freeShippingAbove', Number(e.target.value))} className="rounded-xl" />
-          </div>
-          <div className="flex items-center justify-between md:col-span-2 py-2">
+        {/* Store Details */}
+        <TabsContent value="store">
+          <div className="modern-card p-6 space-y-6">
             <div>
-              <p className="font-medium">Cash on Delivery</p>
-              <p className="text-sm text-muted-foreground">Allow COD payment method</p>
+              <h3 className="font-semibold mb-1">Store Information</h3>
+              <p className="text-sm text-muted-foreground">Basic details about your store</p>
             </div>
-            <Switch checked={settings.codEnabled} onCheckedChange={v => update('codEnabled', v)} />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label>Store Name <span className="text-destructive">*</span></Label>
+                <Input value={settings.storeName} onChange={e => update('storeName', e.target.value)} />
+              </div>
+              <div className="space-y-1.5">
+                <Label>GST Number</Label>
+                <Input value={settings.gstNumber} onChange={e => update('gstNumber', e.target.value)} />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Contact Email <span className="text-destructive">*</span></Label>
+                <Input type="email" value={settings.contactEmail} onChange={e => update('contactEmail', e.target.value)} />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Contact Phone <span className="text-destructive">*</span></Label>
+                <Input value={settings.contactPhone} onChange={e => update('contactPhone', e.target.value)} />
+              </div>
+              <div className="space-y-1.5 md:col-span-2">
+                <Label>Store Logo</Label>
+                <div className="flex items-center gap-4">
+                  <div className="w-16 h-16 rounded-xl bg-secondary flex items-center justify-center text-3xl border">{settings.logo}</div>
+                  <Button variant="outline" className="gap-2"><Upload className="w-4 h-4" /> Upload Logo</Button>
+                  <p className="text-xs text-muted-foreground">200×200px recommended</p>
+                </div>
+              </div>
+            </div>
+            <div className="flex justify-end pt-4 border-t">
+              <Button className="gradient-primary text-primary-foreground" onClick={save}>Save Changes</Button>
+            </div>
           </div>
-        </div>
-      </div>
+        </TabsContent>
 
-      {/* Tax Settings */}
-      <div className="modern-card p-6 animate-fade-in">
-        <div className="flex items-center gap-3 mb-6">
-          <div className="w-10 h-10 rounded-xl bg-success/10 flex items-center justify-center">
-            <Receipt className="w-5 h-5 text-success" />
-          </div>
-          <div>
-            <h3 className="font-semibold text-foreground">Tax Settings</h3>
-            <p className="text-sm text-muted-foreground">GST configuration</p>
-          </div>
-        </div>
-        <div className="max-w-xs space-y-2">
-          <Label>GST Percentage (%)</Label>
-          <Input type="number" value={settings.gstPercent} onChange={e => update('gstPercent', Number(e.target.value))} className="rounded-xl" />
-        </div>
-      </div>
+        {/* Shipping */}
+        <TabsContent value="shipping">
+          <div className="modern-card p-6 space-y-6">
+            <div>
+              <h3 className="font-semibold mb-1">Shipping & Delivery</h3>
+              <p className="text-sm text-muted-foreground">Configure delivery options and charges</p>
+            </div>
 
-      {/* Save */}
-      <div className="flex justify-end gap-3">
-        <Button variant="outline" className="rounded-xl">Cancel</Button>
-        <Button className="rounded-xl gradient-primary text-primary-foreground" onClick={save}>Save Settings</Button>
-      </div>
+            {/* Standard Delivery */}
+            <div className="border rounded-lg p-4 space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium">Standard Delivery</p>
+                  <p className="text-xs text-muted-foreground">5-7 business days</p>
+                </div>
+                <Switch defaultChecked />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <Label>Shipping Charges (₹)</Label>
+                  <Input type="number" value={settings.shippingCharges} onChange={e => update('shippingCharges', Number(e.target.value))} />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Free Shipping Above (₹)</Label>
+                  <Input type="number" value={settings.freeShippingAbove} onChange={e => update('freeShippingAbove', Number(e.target.value))} />
+                </div>
+              </div>
+            </div>
+
+            {/* COD */}
+            <div className="border rounded-lg p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium">Cash on Delivery (COD)</p>
+                  <p className="text-xs text-muted-foreground">Allow customers to pay on delivery</p>
+                </div>
+                <Switch checked={settings.codEnabled} onCheckedChange={v => update('codEnabled', v)} />
+              </div>
+            </div>
+
+            <div className="flex justify-end pt-4 border-t">
+              <Button className="gradient-primary text-primary-foreground" onClick={save}>Save Changes</Button>
+            </div>
+          </div>
+        </TabsContent>
+
+        {/* Tax */}
+        <TabsContent value="tax">
+          <div className="modern-card p-6 space-y-6">
+            <div>
+              <h3 className="font-semibold mb-1">GST & Tax Configuration</h3>
+              <p className="text-sm text-muted-foreground">Manage tax settings for your products</p>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label>GST Number</Label>
+                <Input value={settings.gstNumber} onChange={e => update('gstNumber', e.target.value)} placeholder="e.g. 24AABCS1234F1Z5" />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Default GST Rate</Label>
+                <Select value={String(settings.gstPercent)} onValueChange={v => update('gstPercent', Number(v))}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="5">5%</SelectItem>
+                    <SelectItem value="12">12%</SelectItem>
+                    <SelectItem value="18">18%</SelectItem>
+                    <SelectItem value="28">28%</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="border rounded-lg p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium">Apply GST on Products</p>
+                  <p className="text-xs text-muted-foreground">Enable GST calculation at checkout</p>
+                </div>
+                <Switch defaultChecked />
+              </div>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium">Prices Include GST</p>
+                  <p className="text-xs text-muted-foreground">Display "Price inclusive of all taxes"</p>
+                </div>
+                <Switch defaultChecked />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label>Invoice Prefix</Label>
+                <Input defaultValue="SG-INV-" placeholder="e.g. SG-INV-" />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Starting Invoice Number</Label>
+                <Input type="number" defaultValue={1001} />
+              </div>
+            </div>
+            <div className="flex justify-end pt-4 border-t">
+              <Button className="gradient-primary text-primary-foreground" onClick={save}>Save Changes</Button>
+            </div>
+          </div>
+        </TabsContent>
+
+        {/* Notifications */}
+        <TabsContent value="notifications">
+          <div className="modern-card p-6 space-y-6">
+            <div>
+              <h3 className="font-semibold mb-1">Notification Settings</h3>
+              <p className="text-sm text-muted-foreground">Configure email and SMS alerts</p>
+            </div>
+            <div>
+              <h4 className="font-medium text-sm mb-3">Email Notifications</h4>
+              <div className="space-y-3">
+                {[
+                  { label: 'New Order Placed', desc: 'Notify admin on new orders', default: true },
+                  { label: 'Order Confirmed', desc: 'Send confirmation to customer', default: true },
+                  { label: 'Order Shipped', desc: 'Send shipping update to customer', default: true },
+                  { label: 'Order Delivered', desc: 'Send delivery confirmation', default: true },
+                  { label: 'Low Stock Alert', desc: 'Notify admin when stock is low', default: true },
+                ].map(item => (
+                  <div key={item.label} className="flex items-center justify-between py-2 border-b border-border/50 last:border-0">
+                    <div>
+                      <p className="text-sm font-medium">{item.label}</p>
+                      <p className="text-xs text-muted-foreground">{item.desc}</p>
+                    </div>
+                    <Switch defaultChecked={item.default} />
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div>
+              <h4 className="font-medium text-sm mb-3">SMS Notifications</h4>
+              <div className="space-y-3">
+                {[
+                  { label: 'Order Confirmation SMS', desc: 'Send to customer on order', default: true },
+                  { label: 'Shipping Update SMS', desc: 'Send tracking info', default: false },
+                  { label: 'Delivery SMS', desc: 'Confirm delivery via SMS', default: false },
+                ].map(item => (
+                  <div key={item.label} className="flex items-center justify-between py-2 border-b border-border/50 last:border-0">
+                    <div>
+                      <p className="text-sm font-medium">{item.label}</p>
+                      <p className="text-xs text-muted-foreground">{item.desc}</p>
+                    </div>
+                    <Switch defaultChecked={item.default} />
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="flex justify-end pt-4 border-t">
+              <Button className="gradient-primary text-primary-foreground" onClick={save}>Save Changes</Button>
+            </div>
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
