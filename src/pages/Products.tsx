@@ -27,7 +27,9 @@ export default function Products() {
   // Add product form state
   const [form, setForm] = useState({
     name: '', categoryId: '', subcategoryId: '', description: '', fabric: '', sku: '',
-    basePrice: 0, discountPercent: 0, stock: 0, sizeVariants: [] as string[], colorVariants: '' ,
+    purchasePrice: 0, sellingPrice: 0, mrp: 0, stock: 0, 
+    sizeVariants: [] as string[], colorVariants: '' as string,
+    variantImages: {} as Record<string, string[]>,
   });
 
   const allSizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL', 'Free Size'];
@@ -64,7 +66,7 @@ export default function Products() {
   const selectedCat = categories.find(c => c.id === form.categoryId);
 
   const handleAddProduct = () => {
-    const finalPrice = form.basePrice - (form.basePrice * form.discountPercent / 100);
+    const discountPercent = form.mrp > 0 ? Math.round(((form.mrp - form.sellingPrice) / form.mrp) * 100) : 0;
     const newProduct: Product = {
       id: Date.now().toString(),
       name: form.name,
@@ -74,17 +76,20 @@ export default function Products() {
       fabric: form.fabric,
       sku: form.sku || `SG-${Date.now().toString().slice(-4)}`,
       images: ['📦'],
-      basePrice: form.basePrice,
-      discountPercent: form.discountPercent,
-      finalPrice: Math.round(finalPrice),
+      purchasePrice: form.purchasePrice,
+      sellingPrice: form.sellingPrice,
+      mrp: form.mrp,
+      discountPercent,
+      finalPrice: form.sellingPrice,
       stock: form.stock,
       sizeVariants: form.sizeVariants,
       colorVariants: form.colorVariants.split(',').map(c => c.trim()).filter(Boolean),
+      variantImages: form.variantImages,
       isPublished: true,
     };
     setProductList(prev => [newProduct, ...prev]);
     setAddOpen(false);
-    setForm({ name: '', categoryId: '', subcategoryId: '', description: '', fabric: '', sku: '', basePrice: 0, discountPercent: 0, stock: 0, sizeVariants: [], colorVariants: '' });
+    setForm({ name: '', categoryId: '', subcategoryId: '', description: '', fabric: '', sku: '', purchasePrice: 0, sellingPrice: 0, mrp: 0, stock: 0, sizeVariants: [], colorVariants: '', variantImages: {} });
     toast({ title: 'Product added', description: `${newProduct.name} has been added to your store.` });
   };
 
@@ -160,20 +165,29 @@ export default function Products() {
               {/* Pricing */}
               <div className="space-y-4">
                 <h4 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">Pricing</h4>
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1.5">
-                    <Label>Base Price (₹) <span className="text-destructive">*</span></Label>
-                    <Input type="number" value={form.basePrice || ''} onChange={e => setForm({...form, basePrice: Number(e.target.value)})} placeholder="0" />
+                    <Label>Purchase Price (₹) <span className="text-destructive">*</span></Label>
+                    <Input type="number" value={form.purchasePrice || ''} onChange={e => setForm({...form, purchasePrice: Number(e.target.value)})} placeholder="Cost price" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>MRP (₹) <span className="text-destructive">*</span></Label>
+                    <Input type="number" value={form.mrp || ''} onChange={e => setForm({...form, mrp: Number(e.target.value)})} placeholder="Maximum retail price" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Selling Price (₹) <span className="text-destructive">*</span></Label>
+                    <Input type="number" value={form.sellingPrice || ''} onChange={e => setForm({...form, sellingPrice: Number(e.target.value)})} placeholder="Your selling price" />
                   </div>
                   <div className="space-y-1.5">
                     <Label>Discount %</Label>
-                    <Input type="number" value={form.discountPercent || ''} onChange={e => setForm({...form, discountPercent: Number(e.target.value)})} placeholder="0" />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label>Final Price (₹)</Label>
-                    <Input value={`₹${Math.round(form.basePrice - (form.basePrice * form.discountPercent / 100))}`} readOnly className="bg-secondary" />
+                    <Input value={form.mrp > 0 ? `${Math.round(((form.mrp - form.sellingPrice) / form.mrp) * 100)}%` : '0%'} readOnly className="bg-secondary" />
                   </div>
                 </div>
+                {form.sellingPrice > 0 && form.purchasePrice > 0 && (
+                  <p className="text-xs text-muted-foreground">
+                    Margin: ₹{form.sellingPrice - form.purchasePrice} ({Math.round(((form.sellingPrice - form.purchasePrice) / form.sellingPrice) * 100)}%)
+                  </p>
+                )}
               </div>
 
               {/* Inventory */}
@@ -213,19 +227,34 @@ export default function Products() {
                 </div>
               </div>
 
-              {/* Images placeholder */}
+              {/* Variant-wise Image Upload */}
               <div className="space-y-4">
-                <h4 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">Product Images</h4>
-                <div className="border-2 border-dashed border-border rounded-lg p-8 text-center">
-                  <Package className="w-10 h-10 text-muted-foreground mx-auto mb-2" />
-                  <p className="text-sm text-muted-foreground">Drop images here or click to browse</p>
-                  <p className="text-xs text-muted-foreground mt-1">Max 5 images, JPG/PNG, 2MB each</p>
-                </div>
+                <h4 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">Product Images (Variant-wise)</h4>
+                {form.colorVariants.split(',').map(c => c.trim()).filter(Boolean).length > 0 ? (
+                  <div className="space-y-4">
+                    {form.colorVariants.split(',').map(c => c.trim()).filter(Boolean).map(color => (
+                      <div key={color} className="border border-border rounded-lg p-4 space-y-2">
+                        <Label className="font-medium">{color}</Label>
+                        <div className="border-2 border-dashed border-border rounded-lg p-6 text-center cursor-pointer hover:border-primary/50 transition-colors">
+                          <Package className="w-8 h-8 text-muted-foreground mx-auto mb-1" />
+                          <p className="text-sm text-muted-foreground">Upload images for <span className="font-medium text-foreground">{color}</span></p>
+                          <p className="text-xs text-muted-foreground mt-1">Max 5 images, JPG/PNG, 2MB each</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="border-2 border-dashed border-border rounded-lg p-8 text-center">
+                    <Package className="w-10 h-10 text-muted-foreground mx-auto mb-2" />
+                    <p className="text-sm text-muted-foreground">Add color variants above to upload images per variant</p>
+                    <p className="text-xs text-muted-foreground mt-1">Or drop general images here</p>
+                  </div>
+                )}
               </div>
 
               <div className="flex justify-end gap-3 pt-4 border-t">
                 <Button variant="outline" onClick={() => setAddOpen(false)}>Cancel</Button>
-                <Button className="gradient-primary text-primary-foreground" onClick={handleAddProduct} disabled={!form.name || !form.categoryId || !form.basePrice}>
+                <Button className="gradient-primary text-primary-foreground" onClick={handleAddProduct} disabled={!form.name || !form.categoryId || !form.sellingPrice}>
                   Publish Product
                 </Button>
               </div>
@@ -298,7 +327,7 @@ export default function Products() {
                         <span className="font-bold text-lg">₹{product.finalPrice.toLocaleString()}</span>
                         {product.discountPercent > 0 && (
                           <>
-                            <span className="text-xs text-muted-foreground line-through">₹{product.basePrice.toLocaleString()}</span>
+                            <span className="text-xs text-muted-foreground line-through">₹{product.mrp.toLocaleString()}</span>
                             <Badge className="text-[10px] bg-success/10 text-success border-0 rounded-full">{product.discountPercent}% off</Badge>
                           </>
                         )}

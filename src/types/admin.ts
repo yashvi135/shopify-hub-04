@@ -7,12 +7,15 @@ export interface Product {
   fabric: string;
   sku: string;
   images: string[];
-  basePrice: number;
+  purchasePrice: number;
+  sellingPrice: number;
+  mrp: number;
   discountPercent: number;
   finalPrice: number;
   stock: number;
   sizeVariants: string[];
   colorVariants: string[];
+  variantImages: Record<string, string[]>;
   isPublished: boolean;
 }
 
