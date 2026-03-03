@@ -1,9 +1,9 @@
-import { 
-  LayoutDashboard, 
-  Package, 
-  ShoppingCart, 
-  Tag, 
-  Image, 
+import {
+  LayoutDashboard,
+  Package,
+  ShoppingCart,
+  Tag,
+  Image,
   CreditCard,
   Settings,
   ChevronLeft,
@@ -13,6 +13,7 @@ import {
 import { NavLink as RouterNavLink, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { useState, useEffect } from 'react';
 
 interface AdminSidebarProps {
   collapsed: boolean;
@@ -31,9 +32,27 @@ const navItems = [
 
 export function AdminSidebar({ collapsed, onToggle }: AdminSidebarProps) {
   const location = useLocation();
+  const [user, setUser] = useState<any>(null);
+
+  useEffect(() => {
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+      try {
+        setUser(JSON.parse(userStr));
+      } catch (e) {
+        console.error("Error parsing user from localStorage", e);
+      }
+    }
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    window.location.href = '/login';
+  };
 
   return (
-    <aside 
+    <aside
       className={cn(
         "fixed left-0 top-0 h-screen bg-gradient-to-b from-sidebar to-[hsl(215,28%,13%)] text-sidebar-foreground transition-all duration-300 z-50 flex flex-col",
         collapsed ? "w-20" : "w-[260px]"
@@ -79,8 +98,8 @@ export function AdminSidebar({ collapsed, onToggle }: AdminSidebarProps) {
               to={item.path}
               className={cn(
                 "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group",
-                isActive 
-                  ? "gradient-primary text-white shadow-lg shadow-primary/25" 
+                isActive
+                  ? "gradient-primary text-white shadow-lg shadow-primary/25"
                   : "text-sidebar-muted hover:text-sidebar-foreground hover:bg-sidebar-accent"
               )}
             >
@@ -96,11 +115,13 @@ export function AdminSidebar({ collapsed, onToggle }: AdminSidebarProps) {
         <div className="px-3 py-3 border-t border-sidebar-border">
           <div className="flex items-center gap-3 p-2.5 rounded-lg bg-sidebar-accent">
             <div className="w-9 h-9 rounded-full gradient-primary flex items-center justify-center">
-              <span className="text-primary-foreground font-semibold text-sm">A</span>
+              <span className="text-primary-foreground font-semibold text-sm">
+                {user?.storeName ? user.storeName.charAt(0).toUpperCase() : 'A'}
+              </span>
             </div>
             <div className="flex-1 min-w-0">
-              <p className="font-medium text-sm truncate">Admin</p>
-              <p className="text-xs text-sidebar-muted truncate">admin@suratgarment.in</p>
+              <p className="font-medium text-sm truncate">{user?.storeName || 'Admin'}</p>
+              <p className="text-xs text-sidebar-muted truncate">{user?.email || 'admin@suratgarment.in'}</p>
             </div>
           </div>
         </div>
@@ -108,7 +129,8 @@ export function AdminSidebar({ collapsed, onToggle }: AdminSidebarProps) {
 
       {/* Logout */}
       <div className="p-3 border-t border-sidebar-border">
-        <button 
+        <button
+          onClick={handleLogout}
           className={cn(
             "flex items-center gap-3 px-3 py-2.5 rounded-lg w-full text-sidebar-muted hover:text-sidebar-foreground hover:bg-sidebar-accent transition-all duration-200"
           )}

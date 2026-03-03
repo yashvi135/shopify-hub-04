@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Outlet, useLocation } from 'react-router-dom';
+import { Outlet, useLocation, Link } from 'react-router-dom';
 import { AdminSidebar } from '@/components/admin/AdminSidebar';
 import { cn } from '@/lib/utils';
 import { Bell, Search, User } from 'lucide-react';
@@ -22,11 +22,11 @@ export function AdminLayout() {
 
   return (
     <div className="min-h-screen bg-background">
-      <AdminSidebar 
-        collapsed={sidebarCollapsed} 
-        onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} 
+      <AdminSidebar
+        collapsed={sidebarCollapsed}
+        onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
       />
-      
+
       <div className={cn(
         "transition-all duration-300",
         sidebarCollapsed ? "ml-20" : "ml-[260px]"
@@ -38,8 +38,8 @@ export function AdminLayout() {
             </h2>
             <div className="relative max-w-sm flex-1 ml-4">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input 
-                placeholder="Search products, orders..." 
+              <Input
+                placeholder="Search products, orders..."
                 className="pl-10 bg-secondary border-0 rounded-lg h-9 text-sm"
               />
             </div>
@@ -49,9 +49,9 @@ export function AdminLayout() {
               <Bell className="w-4 h-4" />
               <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-destructive rounded-full" />
             </Button>
-            <div className="w-9 h-9 rounded-lg gradient-primary flex items-center justify-center">
+            <Link to="/settings" className="w-9 h-9 rounded-lg gradient-primary flex items-center justify-center cursor-pointer transition-transform hover:scale-105">
               <User className="w-4 h-4 text-primary-foreground" />
-            </div>
+            </Link>
           </div>
         </header>
 

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { storeSettings as initial } from '@/data/mockData';
 import { StoreSettings } from '@/types/admin';
 import { Button } from '@/components/ui/button';
@@ -12,8 +12,30 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 export default function Settings() {
-  const [settings, setSettings] = useState<StoreSettings>(initial);
+  const [settings, setSettings] = useState<StoreSettings & { storeLogo?: string }>(initial);
+  const [isUploading, setIsUploading] = useState(false);
   const { toast } = useToast();
+
+  useEffect(() => {
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+      try {
+        const user = JSON.parse(userStr);
+        setSettings(prev => ({
+          ...prev,
+          storeName: user.storeName !== undefined ? user.storeName : prev.storeName,
+          storeLogo: user.storeLogo !== undefined ? user.storeLogo : prev.logo,
+          contactEmail: user.email !== undefined ? user.email : prev.contactEmail,
+          gstNumber: user.gstNumber !== undefined ? user.gstNumber : prev.gstNumber,
+          contactPhone: user.contactNumber !== undefined ? user.contactNumber : prev.contactPhone,
+          shippingCharges: user.shippingCharges !== undefined ? user.shippingCharges : prev.shippingCharges,
+          codEnabled: user.paymentMethod !== undefined ? user.paymentMethod === 'COD' : prev.codEnabled,
+        }));
+      } catch (e) {
+        console.error("Error parsing user from localStorage", e);
+      }
+    }
+  }, []);
 
   const update = (key: keyof StoreSettings, value: any) => {
     setSettings(prev => ({ ...prev, [key]: value }));
@@ -21,6 +43,42 @@ export default function Settings() {
 
   const save = () => {
     toast({ title: 'Settings saved', description: 'Your store settings have been updated successfully.' });
+  };
+
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploading(true);
+    const formData = new FormData();
+    formData.append('storeLogo', file);
+    formData.append('email', settings.contactEmail);
+
+    try {
+      const res = await fetch('http://localhost:5000/api/auth/profile/logo', {
+        method: 'PUT',
+        body: formData
+      });
+      const data = await res.json();
+
+      if (res.ok) {
+        setSettings(prev => ({ ...prev, storeLogo: data.storeLogo }));
+        // Update local storage so it persists
+        const userStr = localStorage.getItem('user');
+        if (userStr) {
+          const user = JSON.parse(userStr);
+          user.storeLogo = data.storeLogo;
+          localStorage.setItem('user', JSON.stringify(user));
+        }
+        toast({ title: 'Logo uploaded', description: 'Your store logo has been updated successfully.' });
+      } else {
+        toast({ title: 'Upload failed', description: data.message || 'Could not upload logo', variant: 'destructive' });
+      }
+    } catch (err) {
+      toast({ title: 'Error', description: 'Failed to connect to server', variant: 'destructive' });
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   return (
@@ -65,8 +123,28 @@ export default function Settings() {
               <div className="space-y-1.5 md:col-span-2">
                 <Label>Store Logo</Label>
                 <div className="flex items-center gap-4">
-                  <div className="w-16 h-16 rounded-xl bg-secondary flex items-center justify-center text-3xl border">{settings.logo}</div>
-                  <Button variant="outline" className="gap-2"><Upload className="w-4 h-4" /> Upload Logo</Button>
+                  <div className="w-16 h-16 rounded-xl bg-secondary flex items-center justify-center overflow-hidden border">
+                    {settings.storeLogo && settings.storeLogo.startsWith('http') ? (
+                      <img src={settings.storeLogo} alt="Store Logo" className="w-full h-full object-cover" />
+                    ) : (
+                      <span className="text-3xl">{settings.logo || '🏪'}</span>
+                    )}
+                  </div>
+                  <div>
+                    <Input
+                      type="file"
+                      accept="image/*"
+                      id="logo-upload"
+                      className="hidden"
+                      onChange={handleLogoUpload}
+                    />
+                    <Label htmlFor="logo-upload" className="cursor-pointer">
+                      <div className={`inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2 gap-2 ${isUploading ? 'opacity-50 pointer-events-none' : ''}`}>
+                        <Upload className="w-4 h-4" />
+                        {isUploading ? 'Uploading...' : 'Upload Logo'}
+                      </div>
+                    </Label>
+                  </div>
                   <p className="text-xs text-muted-foreground">200×200px recommended</p>
                 </div>
               </div>
