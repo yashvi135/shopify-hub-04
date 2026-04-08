@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { storeSettings as initial } from '@/data/mockData';
+import { API_BASE_URL } from '@/api';
 import { StoreSettings } from '@/types/admin';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -55,7 +56,7 @@ export default function Settings() {
     formData.append('email', settings.contactEmail);
 
     try {
-      const res = await fetch('http://localhost:5000/api/auth/profile/logo', {
+      const res = await fetch(`${API_BASE_URL}/api/auth/profile/logo`, {
         method: 'PUT',
         body: formData
       });

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { API_BASE_URL } from '@/api';
 import { Product } from '@/types/admin';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -39,9 +40,13 @@ export default function Products() {
 
   const fetchData = async () => {
     try {
+      const storeId = localStorage.getItem('storeId');
+      const productsUrl = storeId
+        ? `${API_BASE_URL}/api/products?storeId=${storeId}`
+        : `${API_BASE_URL}/api/products`;
       const [prodRes, catRes] = await Promise.all([
-        fetch('http://localhost:5000/api/products'),
-        fetch('http://localhost:5000/api/categories')
+        fetch(productsUrl),
+        fetch(`${API_BASE_URL}/api/categories`)
       ]);
       const prodData = await prodRes.json();
       const catData = await catRes.json();
@@ -67,7 +72,7 @@ export default function Products() {
   const deleteProduct = async (id: string) => {
     if (!window.confirm('Are you sure you want to permanently delete this product?')) return;
     try {
-      const res = await fetch(`http://localhost:5000/api/products/${id}`, { method: 'DELETE' });
+      const res = await fetch(`${API_BASE_URL}/api/products/${id}`, { method: 'DELETE' });
       if (res.ok) {
         setProductList(prev => prev.filter(p => p._id !== id));
         toast({ title: 'Product deleted', description: 'Product has been removed.' });
@@ -77,6 +82,24 @@ export default function Products() {
       }
     } catch (e) {
       toast({ title: 'Error', variant: 'destructive', description: 'Failed to delete product' });
+    }
+  };
+
+  const togglePublish = async (id: string, currentStatus: boolean) => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/products/${id}/publish`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isActive: !currentStatus })
+      });
+      if (res.ok) {
+        setProductList(prev => prev.map(p => p._id === id ? { ...p, isActive: !currentStatus } : p));
+        toast({ title: !currentStatus ? 'Published to Buyer App' : 'Unpublished', description: 'Product sync status updated.' });
+      } else {
+        toast({ title: 'Error', description: 'Failed to update publish status', variant: 'destructive' });
+      }
+    } catch (e) {
+      toast({ title: 'Error', variant: 'destructive', description: 'Failed to update product publish status' });
     }
   };
 
@@ -152,6 +175,10 @@ export default function Products() {
       submitData.append('sizes', JSON.stringify(form.sizeVariants));
       submitData.append('colors', JSON.stringify(form.colorVariants.split(',').map(c => c.trim()).filter(Boolean)));
 
+      // Attach storeId from localStorage
+      const storeId = localStorage.getItem('storeId');
+      if (storeId) submitData.append('storeId', storeId);
+
       // Append Images
       Object.entries(form.variantImages).forEach(([color, files]) => {
         files.forEach(file => {
@@ -160,8 +187,8 @@ export default function Products() {
       });
 
       const url = editingProductId
-        ? `http://localhost:5000/api/products/${editingProductId}`
-        : 'http://localhost:5000/api/products';
+        ? `${API_BASE_URL}/api/products/${editingProductId}`
+        : `${API_BASE_URL}/api/products`;
 
       const res = await fetch(url, {
         method: editingProductId ? 'PUT' : 'POST',
@@ -242,7 +269,10 @@ export default function Products() {
                     <Select value={form.subcategoryId} onValueChange={v => setForm({ ...form, subcategoryId: v })} disabled={!form.categoryId}>
                       <SelectTrigger><SelectValue placeholder="Select subcategory" /></SelectTrigger>
                       <SelectContent>
-                        {selectedCat?.subcategories?.map((s: string) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                        {selectedCat?.subcategories?.map((s: any) => {
+                          const name = typeof s === 'string' ? s : s.name;
+                          return <SelectItem key={name} value={name}>{name}</SelectItem>;
+                        })}
                       </SelectContent>
                     </Select>
                   </div>
@@ -567,6 +597,10 @@ export default function Products() {
                         <Button size="icon" variant="destructive" className="rounded-lg h-9 w-9" onClick={() => deleteProduct(product._id)}><Trash2 className="w-4 h-4" /></Button>
                       </div>
                       <Badge variant="outline" className={cn("absolute top-2 left-2 rounded-full text-xs bg-background/80 backdrop-blur-sm", stockStatus.style)}>{stockStatus.label}</Badge>
+                      <div className="absolute top-2 right-2 rounded-full bg-background/80 backdrop-blur-sm px-2 py-1 shadow flex items-center gap-2 cursor-pointer transition-colors hover:bg-background/90" onClick={(e) => e.stopPropagation()}>
+                         <span className="text-[10px] font-semibold">{product.isActive ? 'Published' : 'Hidden'}</span>
+                         <Switch checked={product.isActive} onCheckedChange={() => togglePublish(product._id, product.isActive)} className="scale-75 data-[state=checked]:bg-green-500" />
+                      </div>
                     </div>
                     <div className="p-4">
                       <h4 className="font-medium text-sm truncate">{product.title}</h4>
@@ -576,7 +610,7 @@ export default function Products() {
                         {(product.pricing?.discountPercentage || 0) > 0 && (
                           <>
                             <span className="text-xs text-muted-foreground line-through">₹{product.pricing?.mrp?.toLocaleString() || 0}</span>
-                            <Badge className="text-[10px] bg-success/10 text-success border-0 rounded-full">{Math.round(product.pricing.discountPercentage)}% off</Badge>
+                            <Badge className="text-[10px] bg-green-500/10 text-green-500 border-0 rounded-full">{Math.round(product.pricing.discountPercentage)}% off</Badge>
                           </>
                         )}
                       </div>
@@ -626,6 +660,12 @@ export default function Products() {
                         <TableCell className="text-sm">{getCategoryName(product.category)}</TableCell>
                         <TableCell className="font-semibold">₹{product.pricing?.sellingPrice?.toLocaleString()}</TableCell>
                         <TableCell><Badge variant="secondary" className={cn("rounded-full text-xs", stockStatus.style)}>{stock} - {stockStatus.label}</Badge></TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2 cursor-pointer" onClick={(e) => e.stopPropagation()}>
+                             <Switch checked={product.isActive} onCheckedChange={() => togglePublish(product._id, product.isActive)} className="scale-90 data-[state=checked]:bg-green-500" />
+                             <span className="text-xs font-medium text-muted-foreground">{product.isActive ? 'Published' : 'Hidden'}</span>
+                          </div>
+                        </TableCell>
                         <TableCell className="text-right">
                           <div className="flex justify-end gap-1">
                             <Button variant="ghost" size="icon" className="h-8 w-8 text-foreground" onClick={() => setViewProduct(product)}><Eye className="w-4 h-4" /></Button>

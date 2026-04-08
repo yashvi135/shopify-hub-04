@@ -1,0 +1,434 @@
+{
+  "info": {
+    "name": "Admin Panel — Full API Collection",
+    "description": "Complete Postman collection for the Surat Garment Admin Panel backend. Use this to test and verify that data flows correctly from Admin Panel → Buyer App sync.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "ADMIN_URL",  "value": "http://localhost:5000", "type": "string" },
+    { "key": "BUYER_URL",  "value": "http://localhost:3000", "type": "string" },
+    { "key": "storeId",    "value": "",                      "type": "string", "description": "Paste your storeId here after login" },
+    { "key": "bannerId",   "value": "",                      "type": "string", "description": "Paste a banner _id here after creating one" },
+    { "key": "sectionId",  "value": "",                      "type": "string" }
+  ],
+  "item": [
+
+    {
+      "name": "🔐 Auth",
+      "item": [
+        {
+          "name": "Register Store (Signup)",
+          "request": {
+            "method": "POST",
+            "url": "{{ADMIN_URL}}/api/auth/signup",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"storeName\": \"Test Store\",\n  \"email\": \"test@store.com\",\n  \"password\": \"Password123!\",\n  \"contactNumber\": \"9999999999\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "url": "{{ADMIN_URL}}/api/auth/login",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"test@store.com\",\n  \"password\": \"Password123!\"\n}"
+            }
+          },
+          "description": "After login, copy storeId from response and paste into the Collection variable."
+        },
+        {
+          "name": "Refresh Token",
+          "request": {
+            "method": "POST",
+            "url": "{{ADMIN_URL}}/api/auth/refresh",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"PASTE_REFRESH_TOKEN_HERE\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "url": "{{ADMIN_URL}}/api/auth/logout",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"PASTE_REFRESH_TOKEN_HERE\"\n}"
+            }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "🏠 Home Sections (Admin Panel)",
+      "item": [
+        {
+          "name": "Initialize Default Sections",
+          "request": {
+            "method": "POST",
+            "url": "{{ADMIN_URL}}/api/home-sections/init",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"storeId\": \"{{storeId}}\"\n}"
+            }
+          },
+          "description": "Creates SEARCH_BANNER (locked) + CATEGORY_GRID (locked) for a new store."
+        },
+        {
+          "name": "Get All Sections",
+          "request": {
+            "method": "GET",
+            "url": "{{ADMIN_URL}}/api/home-sections?storeId={{storeId}}"
+          }
+        },
+        {
+          "name": "Add Section (Best Offers)",
+          "request": {
+            "method": "POST",
+            "url": "{{ADMIN_URL}}/api/home-sections",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"storeId\": \"{{storeId}}\",\n  \"sectionType\": \"BEST_OFFERS\",\n  \"templateType\": \"PRODUCT_GRID\",\n  \"title\": \"Best Offers\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Add Section (New Arrivals)",
+          "request": {
+            "method": "POST",
+            "url": "{{ADMIN_URL}}/api/home-sections",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"storeId\": \"{{storeId}}\",\n  \"sectionType\": \"NEW_ARRIVALS\",\n  \"templateType\": \"PRODUCT_3X2\",\n  \"title\": \"New Arrivals\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Add Section (Promotional Banner)",
+          "request": {
+            "method": "POST",
+            "url": "{{ADMIN_URL}}/api/home-sections",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"storeId\": \"{{storeId}}\",\n  \"sectionType\": \"PROMOTIONAL_BANNER\",\n  \"templateType\": \"PROMOTIONAL_BANNER\",\n  \"title\": \"Special Sale\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Toggle Section Active",
+          "request": {
+            "method": "PUT",
+            "url": "{{ADMIN_URL}}/api/home-sections/{{sectionId}}",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"isActive\": false\n}"
+            }
+          }
+        },
+        {
+          "name": "Reorder Section (Move Up)",
+          "request": {
+            "method": "PUT",
+            "url": "{{ADMIN_URL}}/api/home-sections/reorder/{{sectionId}}",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"direction\": \"up\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Delete Section",
+          "request": {
+            "method": "DELETE",
+            "url": "{{ADMIN_URL}}/api/home-sections/{{sectionId}}"
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "🖼️ Banners (Admin Panel)",
+      "item": [
+        {
+          "name": "Get All Banners",
+          "request": {
+            "method": "GET",
+            "url": "{{ADMIN_URL}}/api/banners?storeId={{storeId}}"
+          }
+        },
+        {
+          "name": "Get Banners — SEARCH type only",
+          "request": {
+            "method": "GET",
+            "url": "{{ADMIN_URL}}/api/banners?storeId={{storeId}}&bannerType=SEARCH"
+          }
+        },
+        {
+          "name": "Get Banners — BACKGROUND position only",
+          "request": {
+            "method": "GET",
+            "url": "{{ADMIN_URL}}/api/banners?storeId={{storeId}}&position=BACKGROUND"
+          }
+        },
+        {
+          "name": "Create Banner — FRONTEND with Images (form-data)",
+          "request": {
+            "method": "POST",
+            "url": "{{ADMIN_URL}}/api/banners/images",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "title",       "value": "Summer Sale Banner",  "type": "text" },
+                { "key": "description", "value": "Shop now",            "type": "text" },
+                { "key": "bannerType",  "value": "SEARCH",              "type": "text" },
+                { "key": "position",    "value": "FRONTEND",            "type": "text" },
+                { "key": "mediaType",   "value": "IMAGES",              "type": "text" },
+                { "key": "linkType",    "value": "none",                "type": "text" },
+                { "key": "storeId",     "value": "{{storeId}}",         "type": "text" },
+                { "key": "mediaImages", "value": "",                    "type": "file", "description": "Upload one or more banner images" }
+              ]
+            }
+          },
+          "description": "⚠️ Must use form-data. Upload image files under the 'mediaImages' key (can select multiple files)."
+        },
+        {
+          "name": "Create Banner — BACKGROUND with Images (form-data)",
+          "request": {
+            "method": "POST",
+            "url": "{{ADMIN_URL}}/api/banners/images",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "title",       "value": "Background Slideshow", "type": "text" },
+                { "key": "bannerType",  "value": "SEARCH",               "type": "text" },
+                { "key": "position",    "value": "BACKGROUND",           "type": "text" },
+                { "key": "mediaType",   "value": "IMAGES",               "type": "text" },
+                { "key": "storeId",     "value": "{{storeId}}",          "type": "text" },
+                { "key": "mediaImages", "value": "",                     "type": "file", "description": "Upload background images" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Banner — BACKGROUND with Video (form-data)",
+          "request": {
+            "method": "POST",
+            "url": "{{ADMIN_URL}}/api/banners/video",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "title",      "value": "Background Video",  "type": "text" },
+                { "key": "bannerType", "value": "SEARCH",            "type": "text" },
+                { "key": "position",   "value": "BACKGROUND",        "type": "text" },
+                { "key": "mediaType",  "value": "VIDEO",             "type": "text" },
+                { "key": "storeId",    "value": "{{storeId}}",       "type": "text" },
+                { "key": "videoFile",  "value": "",                  "type": "file", "description": "Upload one .mp4 or .webm video (max 50MB)" }
+              ]
+            }
+          },
+          "description": "⚠️ Only 1 background video allowed per store per section. Will return 400 if one already exists."
+        },
+        {
+          "name": "Create Banner — PROMOTIONAL (form-data)",
+          "request": {
+            "method": "POST",
+            "url": "{{ADMIN_URL}}/api/banners/images",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "title",       "value": "Promo Banner",      "type": "text" },
+                { "key": "bannerType",  "value": "PROMOTIONAL",       "type": "text" },
+                { "key": "position",    "value": "FRONTEND",          "type": "text" },
+                { "key": "mediaType",   "value": "IMAGES",            "type": "text" },
+                { "key": "storeId",     "value": "{{storeId}}",       "type": "text" },
+                { "key": "mediaImages", "value": "",                  "type": "file" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Banner (form-data)",
+          "request": {
+            "method": "PUT",
+            "url": "{{ADMIN_URL}}/api/banners/{{bannerId}}/images",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "title", "value": "Updated Banner Title", "type": "text" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Toggle Banner Active",
+          "request": {
+            "method": "PUT",
+            "url": "{{ADMIN_URL}}/api/banners/{{bannerId}}/toggle"
+          }
+        },
+        {
+          "name": "Reorder Banner (Move Up)",
+          "request": {
+            "method": "PUT",
+            "url": "{{ADMIN_URL}}/api/banners/{{bannerId}}/reorder",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"direction\": \"up\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Delete Banner",
+          "request": {
+            "method": "DELETE",
+            "url": "{{ADMIN_URL}}/api/banners/{{bannerId}}"
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "🔄 Sync Verification (Buyer App)",
+      "description": "Use these to verify that data synced from Admin Panel is correctly stored and served in the Buyer App.",
+      "item": [
+        {
+          "name": "✅ Get Home Page (auto storeId — no param needed)",
+          "request": {
+            "method": "GET",
+            "url": "{{BUYER_URL}}/api/home?gender=all"
+          },
+          "description": "Buyer app auto-resolves storeId from its Store collection. No storeId param needed after store sync.\nExpected: sections array with sectionType matching what admin configured."
+        },
+        {
+          "name": "✅ Get Home Page (explicit storeId)",
+          "request": {
+            "method": "GET",
+            "url": "{{BUYER_URL}}/api/home?storeId={{storeId}}&gender=all"
+          },
+          "description": "SEARCH_BANNER section data.background = { mediaType, videoUrl?, mediaImages[] } | null\nSEARCH_BANNER section data.frontend = [{ id, title, mediaImages, backgroundImage, link }]"
+        },
+        {
+          "name": "✅ Get All Banners in Buyer App",
+          "request": {
+            "method": "GET",
+            "url": "{{BUYER_URL}}/api/banners"
+          },
+          "description": "Each banner must have: adminBannerId, position, mediaType, videoUrl, mediaImages[], bannerType, storeId."
+        },
+        {
+          "name": "✅ Manual Sync — FRONTEND Banner",
+          "request": {
+            "method": "POST",
+            "url": "{{BUYER_URL}}/api/sync/banner",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"adminBannerId\": \"TEST_ADMIN_ID_001\",\n  \"title\": \"Test FRONTEND Banner\",\n  \"description\": \"Test carousel banner\",\n  \"bannerType\": \"SEARCH\",\n  \"position\": \"FRONTEND\",\n  \"mediaType\": \"IMAGES\",\n  \"mediaImages\": [\"https://via.placeholder.com/800x400\", \"https://via.placeholder.com/800x400/FF5733\"],\n  \"backgroundImage\": \"https://via.placeholder.com/800x200\",\n  \"link\": null,\n  \"linkType\": \"none\",\n  \"linkId\": null,\n  \"displayOrder\": 1,\n  \"isActive\": true,\n  \"storeId\": \"{{storeId}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "✅ Manual Sync — Background Video Banner",
+          "request": {
+            "method": "POST",
+            "url": "{{BUYER_URL}}/api/sync/banner",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"adminBannerId\": \"TEST_BG_VIDEO_001\",\n  \"title\": \"Background Video\",\n  \"bannerType\": \"SEARCH\",\n  \"position\": \"BACKGROUND\",\n  \"mediaType\": \"VIDEO\",\n  \"videoUrl\": \"https://www.w3schools.com/html/mov_bbb.mp4\",\n  \"mediaImages\": [],\n  \"isActive\": true,\n  \"displayOrder\": 0,\n  \"storeId\": \"{{storeId}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "✅ Manual Sync — Home Section",
+          "request": {
+            "method": "POST",
+            "url": "{{BUYER_URL}}/api/sync/home-section",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"adminSectionId\": \"TEST_SECTION_001\",\n  \"adminStoreId\": \"{{storeId}}\",\n  \"sectionType\": \"BEST_OFFERS\",\n  \"templateType\": \"PRODUCT_GRID\",\n  \"title\": \"Best Offers\",\n  \"displayOrder\": 2,\n  \"isActive\": true,\n  \"isLocked\": false\n}"
+            }
+          },
+          "description": "Manually push a section to buyer app. Verify it appears in GET /api/home response."
+        },
+        {
+          "name": "🔴 STEP 1 — Reset Buyer App Store Data (wipe all)",
+          "request": {
+            "method": "POST",
+            "url": "{{BUYER_URL}}/api/sync/reset",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"adminStoreId\": \"{{storeId}}\"\n}"
+            }
+          },
+          "description": "⚠️ DESTRUCTIVE: Deletes ALL sections and banners for this store from buyer app DB.\nResponse tells you how many sections + banners were deleted.\nRun STEP 2 immediately after."
+        },
+        {
+          "name": "🔁 STEP 2 — Force Resync All Sections → Buyer App",
+          "request": {
+            "method": "POST",
+            "url": "{{ADMIN_URL}}/api/home-sections/resync",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"storeId\": \"{{storeId}}\"\n}"
+            }
+          },
+          "description": "Pushes ALL current admin panel sections to buyer app fresh.\nAfter this, re-create banners from admin panel and they will auto-sync."
+        },
+        {
+          "name": "✅ Delete Synced Banner",
+          "request": {
+            "method": "DELETE",
+            "url": "{{BUYER_URL}}/api/sync/banner/TEST_ADMIN_ID_001"
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "📦 Products",
+      "item": [
+        {
+          "name": "Get All Products",
+          "request": {
+            "method": "GET",
+            "url": "{{ADMIN_URL}}/api/products?storeId={{storeId}}"
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "🗂️ Categories",
+      "item": [
+        {
+          "name": "Get All Categories",
+          "request": {
+            "method": "GET",
+            "url": "{{ADMIN_URL}}/api/categories"
+          }
+        }
+      ]
+    }
+
+  ]
+}

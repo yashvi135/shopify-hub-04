@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { API_BASE_URL } from '@/api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -17,7 +18,7 @@ export default function Login() {
         setLoading(true);
 
         try {
-            const res = await fetch('http://localhost:5000/api/auth/login', {
+            const res = await fetch(`${API_BASE_URL}/api/auth/login`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email, password })
@@ -35,12 +36,12 @@ export default function Login() {
                 toast.success("Welcome back!");
                 localStorage.setItem('token', data.token);
                 localStorage.setItem('user', JSON.stringify(data.user));
+                localStorage.setItem('storeId', data.user.storeId);
                 navigate('/'); // Go to dashboard
             }
         } catch (err) {
-            console.warn("Backend not active, simulating for dev purposes.");
-            toast.info('Simulated: Email not found, redirecting to signup.');
-            navigate('/signup', { state: { email, password } });
+            console.error("Login error:", err);
+            toast.error('Unable to connect to the server. Please try again later.');
         } finally {
             setLoading(false);
         }

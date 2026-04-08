@@ -73,6 +73,11 @@ const ProductSchema = new mongoose.Schema({
   isActive: {
     type: Boolean,
     default: true
+  },
+  storeId: {
+    type: String,
+    required: [true, 'Product must belong to a store'],
+    index: true,
   }
 }, {
   timestamps: true

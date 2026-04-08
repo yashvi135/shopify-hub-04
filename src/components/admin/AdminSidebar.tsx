@@ -9,6 +9,7 @@ import {
   ChevronLeft,
   ChevronRight,
   LogOut,
+  LayoutTemplate,
 } from 'lucide-react';
 import { NavLink as RouterNavLink, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -21,13 +22,14 @@ interface AdminSidebarProps {
 }
 
 const navItems = [
-  { icon: LayoutDashboard, label: 'Dashboard', path: '/' },
-  { icon: Package, label: 'Products', path: '/products' },
-  { icon: ShoppingCart, label: 'Orders', path: '/orders' },
-  { icon: Tag, label: 'Coupons', path: '/coupons' },
-  { icon: Image, label: 'Banners', path: '/banners' },
-  { icon: CreditCard, label: 'Payments', path: '/payments' },
-  { icon: Settings, label: 'Settings', path: '/settings' },
+  { icon: LayoutDashboard,  label: 'Dashboard',     path: '/' },
+  { icon: Package,          label: 'Products',      path: '/products' },
+  { icon: ShoppingCart,     label: 'Orders',        path: '/orders' },
+  { icon: Tag,              label: 'Coupons',       path: '/coupons' },
+  { icon: Image,            label: 'Banners',       path: '/banners' },
+  { icon: LayoutTemplate,   label: 'Home Builder',  path: '/home-builder' },
+  { icon: CreditCard,       label: 'Payments',      path: '/payments' },
+  { icon: Settings,         label: 'Settings',      path: '/settings' },
 ];
 
 export function AdminSidebar({ collapsed, onToggle }: AdminSidebarProps) {

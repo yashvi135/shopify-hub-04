@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { toast } from 'sonner';
+import { API_BASE_URL } from '@/api';
 
 export default function Signup() {
     const location = useLocation();
@@ -51,7 +52,7 @@ export default function Signup() {
                 submitData.append('storeLogo', logoFile);
             }
 
-            const res = await fetch('http://localhost:5000/api/auth/register', {
+            const res = await fetch(`${API_BASE_URL}/api/auth/register`, {
                 method: 'POST',
                 body: submitData
             });
@@ -63,15 +64,12 @@ export default function Signup() {
                 toast.success("Account created successfully!");
                 localStorage.setItem('token', data.token);
                 localStorage.setItem('user', JSON.stringify(data.user));
+                localStorage.setItem('storeId', data.user.storeId);
                 navigate('/'); // Go to dashboard
             }
         } catch (err) {
-            console.warn("Backend not active, simulating for dev purposes.");
-            const simulatedUser = { email: formData.email, storeName: formData.storeName, gstNumber: formData.gstNumber, contactNumber: formData.contactNumber, shippingCharges: formData.shippingCharges, paymentMethod: formData.paymentMethod };
-            localStorage.setItem('token', 'simulated-token-123');
-            localStorage.setItem('user', JSON.stringify(simulatedUser));
-            toast.success('Simulated store creation successful.');
-            navigate('/');
+            console.error("Signup error:", err);
+            toast.error('Unable to connect to the server. Please try again later.');
         } finally {
             setLoading(false);
         }

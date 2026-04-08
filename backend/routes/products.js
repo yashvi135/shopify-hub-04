@@ -1,7 +1,42 @@
 const express = require('express');
 const router = express.Router();
 const Product = require('../models/Product');
+const Category = require('../models/Category');
 const upload = require('../middleware/upload');
+const axios = require('axios');
+
+const BUYER_APP_URL = process.env.BUYER_APP_URL || 'http://localhost:3000';
+
+// ─── Helper: push one product to buyer app ────────────────────────────────────
+async function syncProductToBuyerApp(product) {
+  try {
+    // Ensure category is populated for its name
+    if (!product.populated('category') && product.category) {
+      await product.populate('category');
+    }
+
+    const payload = {
+      adminProductId:  product._id.toString(),
+      name:            product.title,
+      description:     product.description,
+      categoryName:    product.category ? product.category.name : null,
+      subcategoryName: product.subcategory,
+      mrp:             product.pricing.mrp,
+      sellingPrice:    product.pricing.sellingPrice,
+      stockQuantity:   product.inventory.stockQuantity,
+      sizes:           product.variants.sizes,
+      images:          product.baseImages.concat(
+                         product.variantImages.flatMap(v => v.urls)
+                       ),
+      isActive:        product.isActive,
+      storeId:         product.storeId,
+    };
+
+    await axios.post(`${BUYER_APP_URL}/api/sync/product`, payload);
+  } catch (err) {
+    console.error('[Sync] Failed to sync product to buyer app:', err.message);
+  }
+}
 
 // @desc    Create new product
 // @route   POST /api/products
@@ -16,6 +51,7 @@ router.post('/', upload.any(), async (req, res) => {
       description: reqData.description,
       category: reqData.categoryId,
       subcategory: reqData.subcategoryId,
+      storeId: reqData.storeId,
       pricing: {
         purchasePrice: Number(reqData.purchasePrice),
         mrp: Number(reqData.mrp),
@@ -130,19 +166,27 @@ router.put('/:id', upload.any(), async (req, res) => {
 
     product = await Product.findByIdAndUpdate(req.params.id, upProductData, { new: true, runValidators: true });
     
+    // Sync to Buyer App if active
+    if (product.isActive) {
+      syncProductToBuyerApp(product);
+    }
+
     res.status(200).json({ success: true, data: product });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
 });
 
-// @desc    Get all products
-// @route   GET /api/products
+// @desc    Get all products (filtered by storeId)
+// @route   GET /api/products?storeId=STORE_xxx
 // @access  Public
 router.get('/', async (req, res) => {
   try {
+    const { storeId } = req.query;
+    // Build query: if storeId is provided filter by it, otherwise return all (admin view)
+    const query = storeId ? { storeId } : {};
     // Populate the category details
-    const products = await Product.find({ isActive: true }).populate('category', 'name');
+    const products = await Product.find(query).populate('category', 'name');
     res.status(200).json({ success: true, count: products.length, data: products });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -175,6 +219,31 @@ router.delete('/:id', async (req, res) => {
     }
     await product.deleteOne();
     res.status(200).json({ success: true, data: {} });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// @desc    Toggle product publish status and sync to buyer app
+// @route   PUT /api/products/:id/publish
+// @access  Public
+router.put('/:id/publish', async (req, res) => {
+  try {
+    const { isActive } = req.body;
+    let product = await Product.findById(req.params.id).populate('category');
+    if (!product) {
+      return res.status(404).json({ success: false, message: 'Product not found' });
+    }
+
+    product.isActive = isActive;
+    await product.save();
+
+    // Sync to Buyer App asynchronously
+    if (isActive) {
+      syncProductToBuyerApp(product);
+    }
+
+    res.status(200).json({ success: true, data: product });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }

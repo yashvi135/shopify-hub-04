@@ -16,6 +16,7 @@ import { AuthLayout } from "@/layouts/AuthLayout";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import ForgotPassword from "./pages/ForgotPassword";
+import HomeBuilder from "./pages/HomeBuilder";
 
 const queryClient = new QueryClient();
 
@@ -34,6 +35,7 @@ const App = () => (
             <Route path="/banners" element={<Banners />} />
             <Route path="/payments" element={<Payments />} />
             <Route path="/settings" element={<Settings />} />
+            <Route path="/home-builder" element={<HomeBuilder />} />
           </Route>
           <Route element={<AuthLayout />}>
             <Route path="/login" element={<Login />} />

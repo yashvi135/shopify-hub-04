@@ -39,10 +39,16 @@ const UserSchema = new mongoose.Schema({
     type: String,
     enum: ['COD', 'Gateway'],
   },
+  storeId: {
+    type: String,
+    unique: true,
+    index: true,
+  },
   isProfileComplete: {
     type: Boolean,
     default: false
   },
+  refreshToken: String,
   resetPasswordOtp: String,
   resetPasswordExpire: Date
 }, { timestamps: true });

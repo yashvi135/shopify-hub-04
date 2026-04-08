@@ -1,5 +1,17 @@
 const mongoose = require('mongoose');
 
+const SubcategorySchema = new mongoose.Schema({
+  name: {
+    type: String,
+    required: [true, 'Please add a subcategory name'],
+    trim: true
+  },
+  image: {
+    type: String,
+    trim: true
+  }
+});
+
 const CategorySchema = new mongoose.Schema({
   name: {
     type: String,
@@ -8,10 +20,11 @@ const CategorySchema = new mongoose.Schema({
     trim: true,
     maxlength: [50, 'Name can not be more than 50 characters']
   },
-  subcategories: [{
+  image: {
     type: String,
     trim: true
-  }],
+  },
+  subcategories: [SubcategorySchema],
   isActive: {
     type: Boolean,
     default: true

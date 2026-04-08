@@ -3,11 +3,27 @@ const router = express.Router();
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const upload = require('../middleware/upload');
+const axios = require('axios');
+
+const BUYER_APP_URL = process.env.BUYER_APP_URL || 'http://localhost:3000';
 
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
-    expiresIn: process.env.JWT_EXPIRE,
+    expiresIn: process.env.JWT_ACCESS_EXPIRE || '15m',
   });
+};
+
+const generateRefreshToken = (id) => {
+  return jwt.sign({ id }, process.env.JWT_SECRET, {
+    expiresIn: process.env.JWT_REFRESH_EXPIRE || '15d',
+  });
+};
+
+// Generate a unique storeId: epoch time + random 4-digit number
+const generateStoreId = () => {
+  const epoch = Date.now();
+  const rand = Math.floor(1000 + Math.random() * 9000);
+  return `STORE_${epoch}_${rand}`;
 };
 
 // @desc    Register user (Initial step just password setup, or full setup)
@@ -36,14 +52,19 @@ router.post('/register', upload.single('storeLogo'), async (req, res) => {
       shippingCharges,
       shippingDays,
       paymentMethod,
+      storeId: generateStoreId(),
       isProfileComplete: true
     });
 
     const token = generateToken(user._id);
+    const refreshToken = generateRefreshToken(user._id);
+    user.refreshToken = refreshToken;
+    await user.save({ validateBeforeSave: false });
 
     res.status(201).json({
       success: true,
       token,
+      refreshToken,
       user: {
         id: user._id,
         email: user.email,
@@ -54,9 +75,25 @@ router.post('/register', upload.single('storeLogo'), async (req, res) => {
         shippingCharges: user.shippingCharges,
         shippingDays: user.shippingDays,
         paymentMethod: user.paymentMethod,
+        storeId: user.storeId,
         isProfileComplete: user.isProfileComplete
       }
     });
+
+    // Sync store to buyer app asynchronously (fire and forget)
+    axios.post(`${BUYER_APP_URL}/api/sync/store`, {
+      adminStoreId: user.storeId,
+      storeName: user.storeName,
+      storeLogo: user.storeLogo,
+      email: user.email,
+      contactNumber: user.contactNumber
+    }).catch(err => console.error('Failed to sync store to buyer app:', err.message));
+
+    // Initialize default home page sections for the new store
+    axios.post(`http://localhost:${process.env.PORT || 5000}/api/home-sections/init`, {
+      storeId: user.storeId
+    }).catch(err => console.error('Failed to init home sections:', err.message));
+    
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
@@ -84,10 +121,14 @@ router.post('/login', async (req, res) => {
     }
 
     const token = generateToken(user._id);
+    const refreshToken = generateRefreshToken(user._id);
+    user.refreshToken = refreshToken;
+    await user.save({ validateBeforeSave: false });
 
     res.status(200).json({
       success: true,
       token,
+      refreshToken,
       user: {
         id: user._id,
         email: user.email,
@@ -98,6 +139,7 @@ router.post('/login', async (req, res) => {
         shippingCharges: user.shippingCharges,
         shippingDays: user.shippingDays,
         paymentMethod: user.paymentMethod,
+        storeId: user.storeId,
         isProfileComplete: user.isProfileComplete
       }
     });
@@ -127,7 +169,7 @@ router.post('/forgotpassword', async (req, res) => {
     // Expire in 10 minutes
     user.resetPasswordExpire = Date.now() + 10 * 60 * 1000;
     
-    await user.save();
+    await user.save({ validateBeforeSave: false });
 
     // Send email
     const sendEmail = require('../utils/sendEmail');
@@ -216,6 +258,46 @@ router.put('/profile/logo', upload.single('storeLogo'), async (req, res) => {
       message: 'Logo updated successfully',
       storeLogo: user.storeLogo
     });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// @desc    Refresh token
+// @route   POST /api/auth/refresh
+// @access  Public
+router.post('/refresh', async (req, res) => {
+  const { refreshToken } = req.body;
+
+  if (!refreshToken) {
+    return res.status(401).json({ success: false, message: 'Refresh token not provided' });
+  }
+
+  try {
+    const decoded = jwt.verify(refreshToken, process.env.JWT_SECRET);
+    const user = await User.findById(decoded.id);
+
+    if (!user || user.refreshToken !== refreshToken) {
+      return res.status(401).json({ success: false, message: 'Invalid refresh token' });
+    }
+
+    const token = generateToken(user._id);
+    res.status(200).json({ success: true, token });
+  } catch (error) {
+    res.status(401).json({ success: false, message: 'Session expired. Please log in again.' });
+  }
+});
+
+// @desc    Logout
+// @route   POST /api/auth/logout
+// @access  Public
+router.post('/logout', async (req, res) => {
+  try {
+    const { refreshToken } = req.body;
+    if (refreshToken) {
+      await User.findOneAndUpdate({ refreshToken }, { refreshToken: null });
+    }
+    res.status(200).json({ success: true, message: 'Logged out successfully' });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }

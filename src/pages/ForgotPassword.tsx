@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { API_BASE_URL } from '@/api';
 import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -21,7 +22,7 @@ export default function ForgotPassword() {
         setLoading(true);
 
         try {
-            const response = await fetch('http://localhost:5000/api/auth/forgotpassword', {
+            const response = await fetch(`${API_BASE_URL}/api/auth/forgotpassword`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email })
@@ -60,7 +61,7 @@ export default function ForgotPassword() {
         setLoading(true);
 
         try {
-            const response = await fetch('http://localhost:5000/api/auth/resetpassword', {
+            const response = await fetch(`${API_BASE_URL}/api/auth/resetpassword`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email, otp, newPassword })
