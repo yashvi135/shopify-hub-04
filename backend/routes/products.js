@@ -177,17 +177,43 @@ router.put('/:id', upload.any(), async (req, res) => {
   }
 });
 
-// @desc    Get all products (filtered by storeId)
-// @route   GET /api/products?storeId=STORE_xxx
+// @desc    Get all products (filtered by storeId) with pagination
+// @route   GET /api/products?storeId=STORE_xxx&page=1&limit=20&search=keyword
 // @access  Public
 router.get('/', async (req, res) => {
   try {
-    const { storeId } = req.query;
-    // Build query: if storeId is provided filter by it, otherwise return all (admin view)
+    const { storeId, page = 1, limit = 20, search } = req.query;
+
+    // Build query
     const query = storeId ? { storeId } : {};
-    // Populate the category details
-    const products = await Product.find(query).populate('category', 'name');
-    res.status(200).json({ success: true, count: products.length, data: products });
+
+    // Optional search by title
+    if (search && search.trim()) {
+      query.title = { $regex: search.trim(), $options: 'i' };
+    }
+
+    const pageNum  = Math.max(1, parseInt(page, 10));
+    const limitNum = Math.min(100, Math.max(1, parseInt(limit, 10))); // cap at 100
+    const skip     = (pageNum - 1) * limitNum;
+
+    const [products, total] = await Promise.all([
+      Product.find(query)
+        .populate('category', 'name')
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limitNum)
+        .lean(), // lean() returns plain JS objects — faster than Mongoose documents
+      Product.countDocuments(query),
+    ]);
+
+    res.status(200).json({
+      success: true,
+      count: products.length,
+      total,
+      page: pageNum,
+      totalPages: Math.ceil(total / limitNum),
+      data: products,
+    });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }

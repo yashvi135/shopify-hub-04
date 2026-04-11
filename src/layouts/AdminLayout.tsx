@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Outlet, useLocation, Link } from 'react-router-dom';
+import { Outlet, useLocation, Link, Navigate } from 'react-router-dom';
 import { AdminSidebar } from '@/components/admin/AdminSidebar';
 import { cn } from '@/lib/utils';
 import { Bell, Search, User } from 'lucide-react';
@@ -20,6 +20,12 @@ const pageTitles: Record<string, string> = {
 export function AdminLayout() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const location = useLocation();
+
+  // ─── Auth Guard ────────────────────────────────────────
+  const token = localStorage.getItem('token');
+  if (!token) {
+    return <Navigate to="/login" replace />;
+  }
 
   return (
     <div className="min-h-screen bg-background">

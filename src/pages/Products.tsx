@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { API_BASE_URL } from '@/api';
 import { Product } from '@/types/admin';
 import { Badge } from '@/components/ui/badge';
@@ -26,6 +26,11 @@ export default function Products() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [viewProduct, setViewProduct] = useState<any | null>(null);
   const [editingProductId, setEditingProductId] = useState<string | null>(null);
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const PAGE_LIMIT = 20;
   const { toast } = useToast();
 
   // Add product form state
@@ -38,35 +43,48 @@ export default function Products() {
 
   const allSizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL', 'Free Size'];
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async (page = 1) => {
     try {
       const storeId = localStorage.getItem('storeId');
+      const searchParam = searchQuery.trim() ? `&search=${encodeURIComponent(searchQuery.trim())}` : '';
       const productsUrl = storeId
-        ? `${API_BASE_URL}/api/products?storeId=${storeId}`
-        : `${API_BASE_URL}/api/products`;
+        ? `${API_BASE_URL}/api/products?storeId=${storeId}&page=${page}&limit=${PAGE_LIMIT}${searchParam}`
+        : `${API_BASE_URL}/api/products?page=${page}&limit=${PAGE_LIMIT}${searchParam}`;
+
       const [prodRes, catRes] = await Promise.all([
         fetch(productsUrl),
-        fetch(`${API_BASE_URL}/api/categories`)
+        categories.length === 0 ? fetch(`${API_BASE_URL}/api/categories`) : Promise.resolve(null),
       ]);
       const prodData = await prodRes.json();
-      const catData = await catRes.json();
-      if (prodData.success) setProductList(prodData.data);
-      if (catData.success) setCategories(catData.data);
+      if (prodData.success) {
+        setProductList(prodData.data);
+        setCurrentPage(prodData.page ?? 1);
+        setTotalPages(prodData.totalPages ?? 1);
+        setTotalCount(prodData.total ?? 0);
+      }
+      if (catRes) {
+        const catData = await catRes.json();
+        if (catData.success) setCategories(catData.data);
+      }
     } catch (error) {
       console.error('Error fetching inventory:', error);
     }
-  };
+  }, [searchQuery]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Use a debounced effect for both initial load and search queries
   useEffect(() => {
-    fetchData();
-  }, []);
+    const timer = setTimeout(() => {
+      setCurrentPage(1);
+      fetchData(1);
+    }, 400); // 400ms debounce for typing
+    
+    return () => clearTimeout(timer);
+  }, [searchQuery, fetchData]);
 
   const filteredProducts = productList.filter(product => {
-    const matchesSearch = !searchQuery ||
-      product.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      product.sku?.toLowerCase().includes(searchQuery.toLowerCase());
+    // Server handles search, client-side filter only for category (already paginated)
     const matchesCat = !selectedCategory || product.category?._id === selectedCategory || product.category === selectedCategory;
-    return matchesSearch && matchesCat;
+    return matchesCat;
   });
 
   const deleteProduct = async (id: string) => {
@@ -152,6 +170,11 @@ export default function Products() {
   const removeImage = (color: string, index: number) => {
     setForm(prev => {
       const updated = { ...prev.variantImages };
+      // Revoke the blob URL to prevent memory leaks
+      const fileToRemove = updated[color]?.[index];
+      if (fileToRemove) {
+        URL.revokeObjectURL(URL.createObjectURL(fileToRemove));
+      }
       updated[color] = updated[color].filter((_, i) => i !== index);
       return { ...prev, variantImages: updated };
     });
@@ -201,7 +224,7 @@ export default function Products() {
         setEditingProductId(null);
         setForm({ name: '', categoryId: '', subcategoryId: '', description: '', fabric: '', sku: '', purchasePrice: 0, sellingPrice: 0, mrp: 0, stock: 0, sizeVariants: [], colorVariants: '', variantImages: {} });
         toast({ title: editingProductId ? 'Product Updated' : 'Product added', description: `${form.name} has been successfully saved.` });
-        fetchData(); // Refresh to get populated category
+        fetchData(currentPage); // Stay on current page after edit
       } else {
         toast({ title: 'Failed to add product', description: data.message, variant: 'destructive' });
       }
@@ -372,7 +395,7 @@ export default function Products() {
                           <div className="flex flex-wrap gap-2 mb-2">
                             {form.variantImages[color].map((f, idx) => (
                               <div key={idx} className="relative w-16 h-16 rounded-md overflow-hidden group">
-                                <img src={URL.createObjectURL(f)} className="w-full h-full object-cover" alt="Preview" />
+                                <FilePreview file={f} className="w-full h-full object-cover" />
                                 <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                                   <button onClick={() => removeImage(color, idx)} className="text-white hover:text-red-400"><Trash2 className="w-4 h-4" /></button>
                                 </div>
@@ -682,10 +705,52 @@ export default function Products() {
           )}
         </TabsContent>
 
+        {/* ─── Pagination Controls ──────────────────────────────────────── */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between pt-4 border-t border-border">
+            <p className="text-sm text-muted-foreground">
+              Showing {(currentPage - 1) * PAGE_LIMIT + 1}–{Math.min(currentPage * PAGE_LIMIT, totalCount)} of {totalCount} products
+            </p>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline" size="sm"
+                disabled={currentPage <= 1}
+                onClick={() => { const p = currentPage - 1; setCurrentPage(p); fetchData(p); }}
+              >
+                ← Prev
+              </Button>
+              <span className="text-sm font-medium px-2">
+                Page {currentPage} / {totalPages}
+              </span>
+              <Button
+                variant="outline" size="sm"
+                disabled={currentPage >= totalPages}
+                onClick={() => { const p = currentPage + 1; setCurrentPage(p); fetchData(p); }}
+              >
+                Next →
+              </Button>
+            </div>
+          </div>
+        )}
+
         <TabsContent value="categories" className="mt-4">
           <CategoryManager />
         </TabsContent>
       </Tabs>
     </div>
   );
+}
+
+// ─── FilePreview component — creates & revokes blob URLs safely ──────────────
+function FilePreview({ file, className }: { file: File; className?: string }) {
+  const [src, setSrc] = useState<string>('');
+
+  useEffect(() => {
+    const url = URL.createObjectURL(file);
+    setSrc(url);
+    return () => URL.revokeObjectURL(url); // cleanup on unmount or file change
+  }, [file]);
+
+  if (!src) return null;
+  return <img src={src} className={className} alt="Preview" />;
 }

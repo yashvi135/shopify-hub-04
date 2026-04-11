@@ -73,27 +73,37 @@ export default function Banners() {
   const [backgroundImgPreview, setBackgroundImgPreview] = useState<string>('');
   const [videoPreview,         setVideoPreview]         = useState<string>('');
 
-  // ─── Fetch ────────────────────────────────────────────────────────────────
+  // ─── Fetch banners + categories on mount ──────────────────────────────────
   const fetchData = async () => {
     try {
       const storeId = localStorage.getItem('storeId') || '';
-      const [bannersRes, catRes, prodRes] = await Promise.all([
+      const [bannersRes, catRes] = await Promise.all([
         fetch(`${API}/api/banners?storeId=${storeId}`),
         fetch(`${API}/api/categories`),
-        fetch(`${API}/api/products?storeId=${storeId}`),
       ]);
-      const [bannersData, catData, prodData] = await Promise.all([
-        bannersRes.json(), catRes.json(), prodRes.json(),
+      const [bannersData, catData] = await Promise.all([
+        bannersRes.json(), catRes.json(),
       ]);
       if (bannersData.success) setBannerList(bannersData.data);
       if (catData.success)     setCategories(catData.data);
-      if (prodData.success)    setProducts(prodData.data);
     } catch {
       toast({ title: 'Error fetching data', variant: 'destructive' });
     }
   };
 
   useEffect(() => { fetchData(); }, []);
+
+  // ─── Lazy-fetch products ONLY when linkType=product dropdown is opened ──────
+  const [productsFetched, setProductsFetched] = useState(false);
+  const fetchProductsIfNeeded = async () => {
+    if (productsFetched) return;
+    try {
+      const storeId = localStorage.getItem('storeId') || '';
+      const res  = await fetch(`${API}/api/products?storeId=${storeId}&limit=100`);
+      const data = await res.json();
+      if (data.success) { setProducts(data.data); setProductsFetched(true); }
+    } catch { /* silent */ }
+  };
 
   // ─── Reset form & file refs ───────────────────────────────────────────────
   const resetForm = () => {
@@ -557,7 +567,11 @@ export default function Banners() {
                   {form.linkType === 'product' && (
                     <div className="space-y-1.5">
                       <Label>Select Product</Label>
-                      <Select value={form.linkId} onValueChange={v => setForm({ ...form, linkId: v })}>
+                      <Select
+                        value={form.linkId}
+                        onValueChange={v => setForm({ ...form, linkId: v })}
+                        onOpenChange={(open) => { if (open) fetchProductsIfNeeded(); }}
+                      >
                         <SelectTrigger><SelectValue placeholder="Choose…" /></SelectTrigger>
                         <SelectContent>
                           {products.map(p => <SelectItem key={p._id} value={p._id}>{p.title}</SelectItem>)}

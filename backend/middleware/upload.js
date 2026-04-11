@@ -15,7 +15,10 @@ const logoStorage = new CloudinaryStorage({
   params: {
     folder: 'surat-garment-logos',
     allowed_formats: ['jpg', 'png', 'jpeg', 'webp', 'avif', 'gif'],
-    transformation: [{ width: 500, height: 500, crop: 'limit' }],
+    transformation: [
+      { width: 800, height: 800, crop: 'limit' },
+      { quality: 'auto', fetch_format: 'auto' }, // Auto WebP/AVIF + smart compression
+    ],
   },
 });
 const upload = multer({ storage: logoStorage, limits: { fileSize: 5 * 1024 * 1024 } });

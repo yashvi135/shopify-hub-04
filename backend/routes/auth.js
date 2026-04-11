@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
 const User = require('../models/User');
 const upload = require('../middleware/upload');
 const axios = require('axios');
@@ -164,8 +165,8 @@ router.post('/forgotpassword', async (req, res) => {
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     
     // Hash OTP before saving (for security like password)
-    const salt = await require('bcryptjs').genSalt(10);
-    user.resetPasswordOtp = await require('bcryptjs').hash(otp, salt);
+    const salt = await bcrypt.genSalt(10);
+    user.resetPasswordOtp = await bcrypt.hash(otp, salt);
     // Expire in 10 minutes
     user.resetPasswordExpire = Date.now() + 10 * 60 * 1000;
     
@@ -215,7 +216,7 @@ router.put('/resetpassword', async (req, res) => {
     }
 
     // Check OTP
-    const isMatch = await require('bcryptjs').compare(otp, user.resetPasswordOtp);
+    const isMatch = await bcrypt.compare(otp, user.resetPasswordOtp);
     if (!isMatch) {
       return res.status(400).json({ success: false, message: 'Invalid OTP' });
     }
