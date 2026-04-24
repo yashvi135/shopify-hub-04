@@ -2,34 +2,8 @@ const express = require('express');
 const router = express.Router();
 const Category = require('../models/Category');
 const upload = require('../middleware/upload');
-const axios = require('axios');
+const syncService = require('../utils/syncService');
 
-const BUYER_APP_URL = process.env.BUYER_APP_URL || 'http://localhost:3000';
-
-// ─── Helper: push one category to buyer app ──────────────────────────────────
-async function syncCategoryToBuyerApp(category) {
-  try {
-    await axios.post(`${BUYER_APP_URL}/api/sync/category`, {
-      adminCategoryId: category._id.toString(),
-      name:            category.name,
-      description:     category.description,
-      image:           category.image,
-      isActive:        category.isActive,
-      subcategories:   category.subcategories,
-    });
-  } catch (err) {
-    console.error('[Sync] Failed to sync category to buyer app:', err.message);
-  }
-}
-
-// ─── Helper: delete one category from buyer app ──────────────────────────────
-async function deleteCategoryFromBuyerApp(categoryId) {
-  try {
-    await axios.delete(`${BUYER_APP_URL}/api/sync/category/${categoryId}`);
-  } catch (err) {
-    console.error('[Sync] Failed to delete category from buyer app:', err.message);
-  }
-}
 
 // @desc    Get all categories
 // @route   GET /api/categories
@@ -64,7 +38,7 @@ router.post('/', upload.single('image'), async (req, res) => {
     const category = await Category.create(categoryData);
 
     // Sync to buyer app
-    syncCategoryToBuyerApp(category);
+    syncService.syncCategory(category);
 
     res.status(201).json({ success: true, data: category });
   } catch (error) {
@@ -105,7 +79,7 @@ router.put('/:id', upload.single('image'), async (req, res) => {
     }
 
     // Sync to buyer app
-    syncCategoryToBuyerApp(category);
+    syncService.syncCategory(category);
 
     res.status(200).json({ success: true, data: category });
   } catch (error) {
@@ -134,7 +108,7 @@ router.post('/:id/subcategories', upload.single('image'), async (req, res) => {
     await category.save();
     
     // Sync to buyer app
-    syncCategoryToBuyerApp(category);
+    syncService.syncCategory(category);
 
     res.status(200).json({ success: true, data: category });
   } catch (error) {
@@ -160,7 +134,7 @@ router.delete('/:id/subcategories/:subId', async (req, res) => {
      await category.save();
      
      // Sync to buyer app
-     syncCategoryToBuyerApp(category);
+     syncService.syncCategory(category);
 
      res.status(200).json({ success: true, data: category });
   } catch(error) {
@@ -181,7 +155,7 @@ router.delete('/:id', async (req, res) => {
     await category.deleteOne();
 
     // Sync to buyer app
-    deleteCategoryFromBuyerApp(adminCategoryId);
+    syncService.deleteCategory(adminCategoryId);
 
     res.status(200).json({ success: true, data: {} });
   } catch (error) {

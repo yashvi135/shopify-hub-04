@@ -305,6 +305,24 @@ export default function HomeBuilder() {
           {sections.length === 0 && !loading && (
             <Button variant="outline" onClick={initSections}>Initialize Default Sections</Button>
           )}
+          {sections.length > 0 && (
+            <Button variant="outline" onClick={async () => {
+              try {
+                const res = await fetch(`${API}/api/home-sections/resync`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ storeId })
+                });
+                const data = await res.json();
+                if (data.success) toast({ title: 'Resynced successfully!' });
+                else toast({ title: 'Resync failed', variant: 'destructive' });
+              } catch (err) {
+                toast({ title: 'Network error', variant: 'destructive' });
+              }
+            }}>
+              <RefreshCw className="w-4 h-4 mr-2" /> Force Resync
+            </Button>
+          )}
           <Dialog open={addOpen} onOpenChange={setAddOpen}>
             <DialogTrigger asChild>
               <Button className="gap-2 gradient-primary text-primary-foreground"><Plus className="w-4 h-4" /> Add Section</Button>

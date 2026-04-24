@@ -28,6 +28,18 @@ const CategorySchema = new mongoose.Schema({
   isActive: {
     type: Boolean,
     default: true
+  },
+  slug: {
+    type: String,
+    trim: true,
+  },
+  description: {
+    type: String,
+    trim: true,
+  },
+  displayOrder: {
+    type: Number,
+    default: 0,
   }
 }, {
   timestamps: true

@@ -14,10 +14,14 @@ export function CategoryManager() {
   const [addOpen, setAddOpen] = useState(false);
   const [newCatName, setNewCatName] = useState('');
   const [newCatImage, setNewCatImage] = useState<File | null>(null);
+  const [newCatDesc, setNewCatDesc] = useState('');
+  const [newCatOrder, setNewCatOrder] = useState(0);
 
   const [editCatId, setEditCatId] = useState<string | null>(null);
   const [editCatName, setEditCatName] = useState('');
   const [editCatImage, setEditCatImage] = useState<File | null>(null);
+  const [editCatDesc, setEditCatDesc] = useState('');
+  const [editCatOrder, setEditCatOrder] = useState(0);
 
   const [addingSubToCat, setAddingSubToCat] = useState<string | null>(null);
   const [newSubName, setNewSubName] = useState('');
@@ -47,6 +51,8 @@ export function CategoryManager() {
       if (newCatImage) {
         formData.append('image', newCatImage);
       }
+      formData.append('description', newCatDesc);
+      formData.append('displayOrder', newCatOrder.toString());
       
       const res = await fetch(`${API_BASE_URL}/api/categories`, {
         method: 'POST',
@@ -57,6 +63,8 @@ export function CategoryManager() {
         setCats(prev => [...prev, data.data]);
         setNewCatName('');
         setNewCatImage(null);
+        setNewCatDesc('');
+        setNewCatOrder(0);
         setAddOpen(false);
         toast({ title: 'Category added', description: `${newCatName} has been created.` });
       } else {
@@ -93,6 +101,8 @@ export function CategoryManager() {
       if (editCatImage) {
         formData.append('image', editCatImage);
       }
+      formData.append('description', editCatDesc);
+      formData.append('displayOrder', editCatOrder.toString());
         
       const res = await fetch(`${API_BASE_URL}/api/categories/${editCatId}`, {
         method: 'PUT',
@@ -104,6 +114,8 @@ export function CategoryManager() {
         setEditCatId(null);
         setEditCatName('');
         setEditCatImage(null);
+        setEditCatDesc('');
+        setEditCatOrder(0);
         toast({ title: 'Category updated', description: 'Changes saved successfully.' });
       } else {
         toast({ title: 'Error', description: data.message, variant: 'destructive' });
@@ -161,7 +173,7 @@ export function CategoryManager() {
         <h2 className="text-lg font-semibold">Categories & Subcategories</h2>
         <Dialog open={addOpen} onOpenChange={(open) => {
            setAddOpen(open);
-           if(!open){ setNewCatName(''); setNewCatImage(null); }
+           if(!open){ setNewCatName(''); setNewCatImage(null); setNewCatDesc(''); setNewCatOrder(0); }
         }}>
           <DialogTrigger asChild>
             <Button className="gap-2 gradient-primary text-primary-foreground"><Plus className="w-4 h-4" /> Add Category</Button>
@@ -172,6 +184,14 @@ export function CategoryManager() {
               <div className="space-y-1.5">
                 <Label>Category Name <span className="text-destructive">*</span></Label>
                 <Input value={newCatName} onChange={e => setNewCatName(e.target.value)} placeholder="e.g. Western Wear" />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Description</Label>
+                <Input value={newCatDesc} onChange={e => setNewCatDesc(e.target.value)} placeholder="Category description..." />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Display Order</Label>
+                <Input type="number" value={newCatOrder} onChange={e => setNewCatOrder(Number(e.target.value))} placeholder="0" />
               </div>
               <div className="space-y-1.5">
                 <Label>Banner Image</Label>
@@ -207,7 +227,7 @@ export function CategoryManager() {
 
         {/* Edit Category Modal */}
         <Dialog open={!!editCatId} onOpenChange={(open) => {
-          if (!open) { setEditCatId(null); setEditCatName(''); setEditCatImage(null); }
+          if (!open) { setEditCatId(null); setEditCatName(''); setEditCatImage(null); setEditCatDesc(''); setEditCatOrder(0); }
         }}>
           <DialogContent>
             <DialogHeader><DialogTitle>Edit Category</DialogTitle></DialogHeader>
@@ -215,6 +235,14 @@ export function CategoryManager() {
               <div className="space-y-1.5">
                 <Label>Category Name <span className="text-destructive">*</span></Label>
                 <Input value={editCatName} onChange={e => setEditCatName(e.target.value)} placeholder="e.g. Western Wear" />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Description</Label>
+                <Input value={editCatDesc} onChange={e => setEditCatDesc(e.target.value)} placeholder="Category description..." />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Display Order</Label>
+                <Input type="number" value={editCatOrder} onChange={e => setEditCatOrder(Number(e.target.value))} placeholder="0" />
               </div>
               <div className="space-y-1.5">
                 <Label>Update Banner Image</Label>
@@ -267,7 +295,7 @@ export function CategoryManager() {
                 </div>
               </div>
               <div className="flex items-center gap-1">
-                <Button size="icon" variant="ghost" className="h-8 w-8" onClick={e => { e.stopPropagation(); setEditCatId(cat._id); setEditCatName(cat.name); }}><Edit className="w-4 h-4" /></Button>
+                <Button size="icon" variant="ghost" className="h-8 w-8" onClick={e => { e.stopPropagation(); setEditCatId(cat._id); setEditCatName(cat.name); setEditCatDesc(cat.description || ''); setEditCatOrder(cat.displayOrder || 0); }}><Edit className="w-4 h-4" /></Button>
                 <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive" onClick={e => { e.stopPropagation(); deleteCategory(cat._id); }}><Trash2 className="w-4 h-4" /></Button>
                 <ChevronRight className={`w-4 h-4 text-muted-foreground transition-transform ${expandedId === cat._id ? 'rotate-90' : ''}`} />
               </div>

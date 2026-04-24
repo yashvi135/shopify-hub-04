@@ -78,6 +78,17 @@ const ProductSchema = new mongoose.Schema({
     type: String,
     required: [true, 'Product must belong to a store'],
     index: true,
+  },
+  genderFilter: {
+    type: String,
+    enum: ['all', 'men', 'women', 'kids'],
+    default: 'all',
+    index: true
+  },
+  isTopSelling: {
+    type: Boolean,
+    default: false,
+    index: true
   }
 }, {
   timestamps: true

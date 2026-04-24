@@ -1,34 +1,13 @@
 const express = require('express');
 const router = express.Router();
 const HomePageSection = require('../models/HomePageSection');
-const axios = require('axios');
-
-const BUYER_APP_URL = process.env.BUYER_APP_URL || 'http://localhost:3000';
-
-// ─── Helper: push one section to buyer app ────────────────────────────────────
-async function syncSectionToBuyerApp(section) {
-  try {
-    await axios.post(`${BUYER_APP_URL}/api/sync/home-section`, {
-      adminSectionId: section._id.toString(),
-      adminStoreId:   section.storeId,
-      sectionType:    section.sectionType,
-      templateType:   section.templateType,
-      title:          section.title,
-      displayOrder:   section.displayOrder,
-      isActive:       section.isActive,
-      isLocked:       section.isLocked,
-      config:         section.config || {},
-    });
-  } catch (err) {
-    console.error('[Sync] Failed to sync section to buyer app:', err.message);
-  }
-}
+const syncService = require('../utils/syncService');
 
 // ─── Helper: push all sections for a store to buyer app ──────────────────────
 async function syncAllSectionsToBuyerApp(storeId) {
   try {
     const sections = await HomePageSection.find({ storeId }).sort({ displayOrder: 1 });
-    await Promise.all(sections.map(syncSectionToBuyerApp));
+    await Promise.all(sections.map(s => syncService.syncHomeSection(s)));
   } catch (err) {
     console.error('[Sync] Failed to sync all sections:', err.message);
   }
@@ -65,7 +44,7 @@ router.post('/', async (req, res) => {
       await HomePageSection.findByIdAndUpdate(categoryGrid._id, { displayOrder: newOrder + 1 });
       // Sync updated CATEGORY_GRID order to buyer app
       const updatedGrid = await HomePageSection.findById(categoryGrid._id);
-      syncSectionToBuyerApp(updatedGrid);
+      syncService.syncHomeSection(updatedGrid);
     }
 
     const section = await HomePageSection.create({
@@ -74,7 +53,7 @@ router.post('/', async (req, res) => {
     });
 
     // Sync new section to buyer app
-    syncSectionToBuyerApp(section);
+    syncService.syncHomeSection(section);
 
     res.status(201).json({ success: true, data: section });
   } catch (error) {
@@ -96,7 +75,7 @@ router.put('/:id', async (req, res) => {
     );
 
     // Sync updated section to buyer app
-    syncSectionToBuyerApp(updated);
+    syncService.syncHomeSection(updated);
 
     res.status(200).json({ success: true, data: updated });
   } catch (error) {
@@ -122,8 +101,7 @@ router.delete('/:id', async (req, res) => {
     );
 
     // Fire-and-forget: delete from buyer app + re-sync all remaining to fix order
-    axios.delete(`${BUYER_APP_URL}/api/sync/home-section/${adminSectionId}`)
-      .catch(err => console.error('[Sync] Delete section failed:', err.message));
+    syncService.deleteHomeSection(adminSectionId);
     syncAllSectionsToBuyerApp(storeId);
 
     res.status(200).json({ success: true, data: {} });

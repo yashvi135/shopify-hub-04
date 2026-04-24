@@ -3,40 +3,8 @@ const router = express.Router();
 const Product = require('../models/Product');
 const Category = require('../models/Category');
 const upload = require('../middleware/upload');
-const axios = require('axios');
+const syncService = require('../utils/syncService');
 
-const BUYER_APP_URL = process.env.BUYER_APP_URL || 'http://localhost:3000';
-
-// ─── Helper: push one product to buyer app ────────────────────────────────────
-async function syncProductToBuyerApp(product) {
-  try {
-    // Ensure category is populated for its name
-    if (!product.populated('category') && product.category) {
-      await product.populate('category');
-    }
-
-    const payload = {
-      adminProductId:  product._id.toString(),
-      name:            product.title,
-      description:     product.description,
-      categoryName:    product.category ? product.category.name : null,
-      subcategoryName: product.subcategory,
-      mrp:             product.pricing.mrp,
-      sellingPrice:    product.pricing.sellingPrice,
-      stockQuantity:   product.inventory.stockQuantity,
-      sizes:           product.variants.sizes,
-      images:          product.baseImages.concat(
-                         product.variantImages.flatMap(v => v.urls)
-                       ),
-      isActive:        product.isActive,
-      storeId:         product.storeId,
-    };
-
-    await axios.post(`${BUYER_APP_URL}/api/sync/product`, payload);
-  } catch (err) {
-    console.error('[Sync] Failed to sync product to buyer app:', err.message);
-  }
-}
 
 // @desc    Create new product
 // @route   POST /api/products
@@ -101,9 +69,38 @@ router.post('/', upload.any(), async (req, res) => {
     }
 
     const product = await Product.create(newProductData);
+
+    // Sync to Buyer App
+    syncService.syncProduct(product);
+
     res.status(201).json({ success: true, data: product });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message, stack: error.stack });
+  }
+});
+
+// @desc    Bulk publish/unpublish products
+// @route   PUT /api/products/bulk-publish
+// @access  Public
+router.put('/bulk-publish', async (req, res) => {
+  try {
+    const { ids, isActive } = req.body;
+    if (!ids || !Array.isArray(ids)) {
+      return res.status(400).json({ success: false, message: 'Array of product IDs is required' });
+    }
+
+    // Update in database
+    await Product.updateMany({ _id: { $in: ids } }, { isActive });
+
+    // Fetch updated products to sync to buyer app
+    const updatedProducts = await Product.find({ _id: { $in: ids } }).populate('category');
+    
+    // Sync to Buyer App
+    await syncService.syncMultipleProducts(updatedProducts);
+
+    res.status(200).json({ success: true, message: `Successfully updated ${ids.length} products` });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
   }
 });
 
@@ -166,10 +163,8 @@ router.put('/:id', upload.any(), async (req, res) => {
 
     product = await Product.findByIdAndUpdate(req.params.id, upProductData, { new: true, runValidators: true });
     
-    // Sync to Buyer App if active
-    if (product.isActive) {
-      syncProductToBuyerApp(product);
-    }
+    // Sync to Buyer App
+    syncService.syncProduct(product);
 
     res.status(200).json({ success: true, data: product });
   } catch (error) {
@@ -244,12 +239,19 @@ router.delete('/:id', async (req, res) => {
       return res.status(404).json({ success: false, message: 'Product not found' });
     }
     await product.deleteOne();
+
+    // Notify Buyer App (Optional, if endpoint exists)
+    syncService.deleteProduct(product._id);
+
     res.status(200).json({ success: true, data: {} });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
 });
 
+// @desc    Toggle product publish status and sync to buyer app
+// @route   PUT /api/products/:id/publish
+// @access  Public
 // @desc    Toggle product publish status and sync to buyer app
 // @route   PUT /api/products/:id/publish
 // @access  Public
@@ -264,10 +266,8 @@ router.put('/:id/publish', async (req, res) => {
     product.isActive = isActive;
     await product.save();
 
-    // Sync to Buyer App asynchronously
-    if (isActive) {
-      syncProductToBuyerApp(product);
-    }
+    // Sync to Buyer App (wait for it or at least catch potential sync errors)
+    await syncService.syncProduct(product);
 
     res.status(200).json({ success: true, data: product });
   } catch (error) {

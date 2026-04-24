@@ -2,36 +2,8 @@ const express = require('express');
 const router = express.Router();
 const Banner = require('../models/Banner');
 const { uploadBannerImages, uploadBannerVideo } = require('../middleware/upload');
-const axios = require('axios');
+const syncService = require('../utils/syncService');
 
-const BUYER_APP_URL = process.env.BUYER_APP_URL || 'http://localhost:3000';
-
-// ─── Helper: push one banner to buyer app ─────────────────────────────────────
-async function syncBannerToBuyerApp(banner) {
-  try {
-    await axios.post(`${BUYER_APP_URL}/api/sync/banner`, {
-      adminBannerId:   banner._id.toString(),
-      title:           banner.title,
-      description:     banner.description,
-      bannerType:      banner.bannerType,
-      position:        banner.position,
-      mediaType:       banner.mediaType,
-      videoUrl:        banner.videoUrl,
-      mediaImages:     banner.mediaImages,
-      backgroundImage: banner.backgroundImage,
-      link:            banner.link,
-      linkType:        banner.linkType,
-      linkId:          banner.linkId,
-      displayOrder:    banner.displayOrder,
-      isActive:        banner.isActive,
-      startDate:       banner.startDate,
-      endDate:         banner.endDate,
-      storeId:         banner.storeId,
-    });
-  } catch (err) {
-    console.error('[Sync] Failed to sync banner to buyer app:', err.message);
-  }
-}
 
 // ─── Helper: parse common body fields ────────────────────────────────────────
 function parseCommonFields(reqData) {
@@ -115,9 +87,7 @@ router.post(
       const banner = await Banner.create(data);
 
       // Sync to buyer app
-      if (banner.isActive) {
-        syncBannerToBuyerApp(banner);
-      }
+      syncService.syncBanner(banner);
 
       res.status(201).json({ success: true, data: banner });
     } catch (error) {
@@ -166,9 +136,7 @@ router.post(
       const banner = await Banner.create(data);
 
       // Sync to buyer app
-      if (banner.isActive) {
-        syncBannerToBuyerApp(banner);
-      }
+      syncService.syncBanner(banner);
 
       res.status(201).json({ success: true, data: banner });
     } catch (error) {
@@ -214,7 +182,7 @@ router.put(
       banner = await Banner.findByIdAndUpdate(req.params.id, updates, { new: true });
 
       // Sync to buyer app
-      syncBannerToBuyerApp(banner);
+      syncService.syncBanner(banner);
 
       res.status(200).json({ success: true, data: banner });
     } catch (error) {
@@ -233,7 +201,7 @@ router.put('/:id/toggle', async (req, res) => {
     await banner.save();
 
     // Sync to buyer app
-    syncBannerToBuyerApp(banner);
+    syncService.syncBanner(banner);
 
     res.status(200).json({ success: true, data: banner });
   } catch (error) {
@@ -274,7 +242,7 @@ router.put('/:id/reorder', async (req, res) => {
     }).sort({ displayOrder: 1 });
 
     // Sync all reordered banners to buyer app to ensure order is fixed
-    updated.forEach(syncBannerToBuyerApp);
+    updated.forEach(syncService.syncBanner);
 
     res.status(200).json({ success: true, data: updated });
   } catch (error) {
@@ -288,7 +256,7 @@ router.delete('/:id', async (req, res) => {
     const banner = await Banner.findById(req.params.id);
     if (!banner) return res.status(404).json({ success: false, message: 'Banner not found' });
     await banner.deleteOne();
-    axios.delete(`${BUYER_APP_URL}/api/sync/banner/${banner._id}`).catch(() => {});
+    syncService.deleteBanner(banner._id);
     res.status(200).json({ success: true, data: {} });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });

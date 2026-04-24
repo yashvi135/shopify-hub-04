@@ -32,6 +32,8 @@ export default function Products() {
   const [totalCount, setTotalCount] = useState(0);
   const PAGE_LIMIT = 20;
   const { toast } = useToast();
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [isBulkUpdating, setIsBulkUpdating] = useState(false);
 
   // Add product form state
   const [form, setForm] = useState({
@@ -39,6 +41,8 @@ export default function Products() {
     purchasePrice: 0, sellingPrice: 0, mrp: 0, stock: 0,
     sizeVariants: [] as string[], colorVariants: '' as string,
     variantImages: {} as Record<string, File[]>,
+    genderFilter: 'all',
+    isTopSelling: false,
   });
 
   const allSizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL', 'Free Size'];
@@ -121,6 +125,29 @@ export default function Products() {
     }
   };
 
+  const handleBulkPublish = async (isActive: boolean) => {
+    if (selectedIds.length === 0 || isBulkUpdating) return;
+    setIsBulkUpdating(true);
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/products/bulk-publish`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids: selectedIds, isActive })
+      });
+      if (res.ok) {
+        setProductList(prev => prev.map(p => selectedIds.includes(p._id) ? { ...p, isActive } : p));
+        toast({ title: 'Bulk Update Success', description: `${selectedIds.length} products ${isActive ? 'published' : 'hidden'}.` });
+        setSelectedIds([]);
+      } else {
+        toast({ title: 'Error', description: 'Failed to update products', variant: 'destructive' });
+      }
+    } catch (e) {
+      toast({ title: 'Error', variant: 'destructive', description: 'Failed to update products' });
+    } finally {
+      setIsBulkUpdating(false);
+    }
+  };
+
   const openEditMode = (product: any) => {
     setEditingProductId(product._id);
     setForm({
@@ -136,7 +163,9 @@ export default function Products() {
       stock: product.inventory?.stockQuantity || 0,
       sizeVariants: product.variants?.sizes || [],
       colorVariants: (product.variants?.colors || []).join(', '),
-      variantImages: {} // Existing Cloudinary images handled separately for simplicity right now
+      variantImages: {}, // Existing Cloudinary images handled separately for simplicity right now
+      genderFilter: product.genderFilter || 'all',
+      isTopSelling: product.isTopSelling || false,
     });
     setAddOpen(true);
   };
@@ -197,6 +226,8 @@ export default function Products() {
       submitData.append('stockQuantity', form.stock.toString());
       submitData.append('sizes', JSON.stringify(form.sizeVariants));
       submitData.append('colors', JSON.stringify(form.colorVariants.split(',').map(c => c.trim()).filter(Boolean)));
+      submitData.append('genderFilter', form.genderFilter);
+      submitData.append('isTopSelling', form.isTopSelling.toString());
 
       // Attach storeId from localStorage
       const storeId = localStorage.getItem('storeId');
@@ -222,9 +253,10 @@ export default function Products() {
       if (data.success) {
         setAddOpen(false);
         setEditingProductId(null);
-        setForm({ name: '', categoryId: '', subcategoryId: '', description: '', fabric: '', sku: '', purchasePrice: 0, sellingPrice: 0, mrp: 0, stock: 0, sizeVariants: [], colorVariants: '', variantImages: {} });
+        setForm({ name: '', categoryId: '', subcategoryId: '', description: '', fabric: '', sku: '', purchasePrice: 0, sellingPrice: 0, mrp: 0, stock: 0, sizeVariants: [], colorVariants: '', variantImages: {}, genderFilter: 'all', isTopSelling: false });
         toast({ title: editingProductId ? 'Product Updated' : 'Product added', description: `${form.name} has been successfully saved.` });
         fetchData(currentPage); // Stay on current page after edit
+        setSelectedIds([]);
       } else {
         toast({ title: 'Failed to add product', description: data.message, variant: 'destructive' });
       }
@@ -255,7 +287,7 @@ export default function Products() {
           if (open) fetchData();
           if (!open) {
             setEditingProductId(null);
-            setForm({ name: '', categoryId: '', subcategoryId: '', description: '', fabric: '', sku: '', purchasePrice: 0, sellingPrice: 0, mrp: 0, stock: 0, sizeVariants: [], colorVariants: '', variantImages: {} });
+            setForm({ name: '', categoryId: '', subcategoryId: '', description: '', fabric: '', sku: '', purchasePrice: 0, sellingPrice: 0, mrp: 0, stock: 0, sizeVariants: [], colorVariants: '', variantImages: {}, genderFilter: 'all', isTopSelling: false });
           }
           setAddOpen(open);
         }}>
@@ -306,6 +338,25 @@ export default function Products() {
                   <div className="space-y-1.5">
                     <Label>Fabric / Material</Label>
                     <Input value={form.fabric} onChange={e => setForm({ ...form, fabric: e.target.value })} placeholder="e.g. Cotton, Silk" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Gender Filter</Label>
+                    <Select value={form.genderFilter} onValueChange={v => setForm({ ...form, genderFilter: v })}>
+                      <SelectTrigger><SelectValue placeholder="Select gender" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All</SelectItem>
+                        <SelectItem value="men">Men</SelectItem>
+                        <SelectItem value="women">Women</SelectItem>
+                        <SelectItem value="kids">Kids</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1.5 flex items-center justify-between border rounded-lg p-2 mt-4">
+                    <div className="space-y-0.5">
+                      <Label>Top Selling</Label>
+                      <p className="text-[10px] text-muted-foreground">Show in Top Selling section</p>
+                    </div>
+                    <Switch checked={form.isTopSelling} onCheckedChange={v => setForm({ ...form, isTopSelling: v })} />
                   </div>
                   <div className="col-span-2 space-y-1.5">
                     <Label>Description</Label>
@@ -588,6 +639,21 @@ export default function Products() {
             </div>
           </div>
 
+          {selectedIds.length > 0 && (
+            <div className="flex items-center gap-4 p-4 bg-primary/5 border border-primary/20 rounded-xl animate-in fade-in slide-in-from-top-4">
+              <span className="text-sm font-medium text-primary">{selectedIds.length} products selected</span>
+              <div className="flex gap-2">
+                <Button size="sm" onClick={() => handleBulkPublish(true)} disabled={isBulkUpdating} className="bg-green-600 hover:bg-green-700 text-white border-0">
+                  <Eye className="w-3.5 h-3.5 mr-1.5" /> {isBulkUpdating ? 'Publishing...' : 'Publish Selected'}
+                </Button>
+                <Button size="sm" variant="outline" onClick={() => handleBulkPublish(false)} disabled={isBulkUpdating} className="border-primary/20 text-primary hover:bg-primary/5">
+                  <X className="w-3.5 h-3.5 mr-1.5" /> {isBulkUpdating ? 'Hiding...' : 'Hide Selected'}
+                </Button>
+                <Button size="sm" variant="ghost" onClick={() => setSelectedIds([])} disabled={isBulkUpdating} className="text-muted-foreground">Cancel</Button>
+              </div>
+            </div>
+          )}
+
           {filteredProducts.length === 0 ? (
             <div className="modern-card p-12 text-center animate-fade-in">
               <Package className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
@@ -620,10 +686,21 @@ export default function Products() {
                         <Button size="icon" variant="destructive" className="rounded-lg h-9 w-9" onClick={() => deleteProduct(product._id)}><Trash2 className="w-4 h-4" /></Button>
                       </div>
                       <Badge variant="outline" className={cn("absolute top-2 left-2 rounded-full text-xs bg-background/80 backdrop-blur-sm", stockStatus.style)}>{stockStatus.label}</Badge>
-                      <div className="absolute top-2 right-2 rounded-full bg-background/80 backdrop-blur-sm px-2 py-1 shadow flex items-center gap-2 cursor-pointer transition-colors hover:bg-background/90" onClick={(e) => e.stopPropagation()}>
-                         <span className="text-[10px] font-semibold">{product.isActive ? 'Published' : 'Hidden'}</span>
-                         <Switch checked={product.isActive} onCheckedChange={() => togglePublish(product._id, product.isActive)} className="scale-75 data-[state=checked]:bg-green-500" />
-                      </div>
+                       <div className="absolute top-2 right-2 rounded-full bg-background/80 backdrop-blur-sm px-2 py-1 shadow flex items-center gap-2 cursor-pointer transition-colors hover:bg-background/90" onClick={(e) => e.stopPropagation()}>
+                          <span className="text-[10px] font-semibold">{product.isActive ? 'Published' : 'Hidden'}</span>
+                          <Switch checked={product.isActive} onCheckedChange={() => togglePublish(product._id, product.isActive)} className="scale-75 data-[state=checked]:bg-green-500" />
+                       </div>
+                       <div className="absolute top-2 left-2 z-10" onClick={(e) => e.stopPropagation()}>
+                         <input
+                            type="checkbox"
+                            className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary"
+                            checked={selectedIds.includes(product._id)}
+                            onChange={(e) => {
+                              if (e.target.checked) setSelectedIds([...selectedIds, product._id]);
+                              else setSelectedIds(selectedIds.filter(id => id !== product._id));
+                            }}
+                          />
+                       </div>
                     </div>
                     <div className="p-4">
                       <h4 className="font-medium text-sm truncate">{product.title}</h4>
@@ -655,6 +732,17 @@ export default function Products() {
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead className="w-12">
+                      <input
+                        type="checkbox"
+                        className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary"
+                        checked={filteredProducts.length > 0 && selectedIds.length === filteredProducts.length}
+                        onChange={(e) => {
+                          if (e.target.checked) setSelectedIds(filteredProducts.map(p => p._id));
+                          else setSelectedIds([]);
+                        }}
+                      />
+                    </TableHead>
                     <TableHead>Product</TableHead>
                     <TableHead>SKU</TableHead>
                     <TableHead>Category</TableHead>
@@ -670,7 +758,18 @@ export default function Products() {
                     const stockStatus = getStockStatus(stock);
                     const displayImage = product.variantImages?.[0]?.urls?.[0] || product.baseImages?.[0] || null;
                     return (
-                      <TableRow key={product._id}>
+                      <TableRow key={product._id} className={selectedIds.includes(product._id) ? 'bg-primary/5' : ''}>
+                        <TableCell>
+                          <input
+                            type="checkbox"
+                            className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary"
+                            checked={selectedIds.includes(product._id)}
+                            onChange={(e) => {
+                              if (e.target.checked) setSelectedIds([...selectedIds, product._id]);
+                              else setSelectedIds(selectedIds.filter(id => id !== product._id));
+                            }}
+                          />
+                        </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-3">
                             <div className="w-10 h-10 rounded-lg bg-secondary flex items-center justify-center overflow-hidden">
