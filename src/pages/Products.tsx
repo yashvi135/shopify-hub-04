@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
-import { Edit, Trash2, Plus, Search, Package, Eye, LayoutGrid, List, X, UploadCloud } from 'lucide-react';
+import { Edit, Trash2, Plus, Search, Package, Eye, LayoutGrid, List, X, UploadCloud, Tag } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { CategoryManager } from '@/components/admin/CategoryManager';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -35,6 +35,11 @@ export default function Products() {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [isBulkUpdating, setIsBulkUpdating] = useState(false);
 
+  // Under ₹999 tab state
+  const [under999List, setUnder999List] = useState<any[]>([]);
+  const [under999Loading, setUnder999Loading] = useState(false);
+  const [activeTab, setActiveTab] = useState('products');
+
   // Add product form state
   const [form, setForm] = useState({
     name: '', categoryId: '', subcategoryId: '', description: '', fabric: '', sku: '',
@@ -43,6 +48,7 @@ export default function Products() {
     variantImages: {} as Record<string, File[]>,
     genderFilter: 'all',
     isTopSelling: false,
+    isUnder999: false,
   });
 
   const allSizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL', 'Free Size'];
@@ -75,6 +81,20 @@ export default function Products() {
     }
   }, [searchQuery]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Fetch Under ₹999 products (for the dedicated tab)
+  const fetchUnder999 = useCallback(async () => {
+    setUnder999Loading(true);
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/products/under-999?limit=100`);
+      const data = await res.json();
+      if (data.success) setUnder999List(data.data);
+    } catch (e) {
+      console.error('Error fetching under-999 products:', e);
+    } finally {
+      setUnder999Loading(false);
+    }
+  }, []);
+
   // Use a debounced effect for both initial load and search queries
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -84,6 +104,11 @@ export default function Products() {
     
     return () => clearTimeout(timer);
   }, [searchQuery, fetchData]);
+
+  // Fetch Under ₹999 products when that tab is activated
+  useEffect(() => {
+    if (activeTab === 'under999') fetchUnder999();
+  }, [activeTab, fetchUnder999]);
 
   const filteredProducts = productList.filter(product => {
     // Server handles search, client-side filter only for category (already paginated)
@@ -166,6 +191,7 @@ export default function Products() {
       variantImages: {}, // Existing Cloudinary images handled separately for simplicity right now
       genderFilter: product.genderFilter || 'all',
       isTopSelling: product.isTopSelling || false,
+      isUnder999: product.isUnder999 || false,
     });
     setAddOpen(true);
   };
@@ -228,6 +254,7 @@ export default function Products() {
       submitData.append('colors', JSON.stringify(form.colorVariants.split(',').map(c => c.trim()).filter(Boolean)));
       submitData.append('genderFilter', form.genderFilter);
       submitData.append('isTopSelling', form.isTopSelling.toString());
+      submitData.append('isUnder999', form.isUnder999.toString());
 
       // Attach storeId from localStorage
       const storeId = localStorage.getItem('storeId');
@@ -253,9 +280,10 @@ export default function Products() {
       if (data.success) {
         setAddOpen(false);
         setEditingProductId(null);
-        setForm({ name: '', categoryId: '', subcategoryId: '', description: '', fabric: '', sku: '', purchasePrice: 0, sellingPrice: 0, mrp: 0, stock: 0, sizeVariants: [], colorVariants: '', variantImages: {}, genderFilter: 'all', isTopSelling: false });
+        setForm({ name: '', categoryId: '', subcategoryId: '', description: '', fabric: '', sku: '', purchasePrice: 0, sellingPrice: 0, mrp: 0, stock: 0, sizeVariants: [], colorVariants: '', variantImages: {}, genderFilter: 'all', isTopSelling: false, isUnder999: false });
         toast({ title: editingProductId ? 'Product Updated' : 'Product added', description: `${form.name} has been successfully saved.` });
         fetchData(currentPage); // Stay on current page after edit
+        if (activeTab === 'under999') fetchUnder999();
         setSelectedIds([]);
       } else {
         toast({ title: 'Failed to add product', description: data.message, variant: 'destructive' });
@@ -287,7 +315,7 @@ export default function Products() {
           if (open) fetchData();
           if (!open) {
             setEditingProductId(null);
-            setForm({ name: '', categoryId: '', subcategoryId: '', description: '', fabric: '', sku: '', purchasePrice: 0, sellingPrice: 0, mrp: 0, stock: 0, sizeVariants: [], colorVariants: '', variantImages: {}, genderFilter: 'all', isTopSelling: false });
+            setForm({ name: '', categoryId: '', subcategoryId: '', description: '', fabric: '', sku: '', purchasePrice: 0, sellingPrice: 0, mrp: 0, stock: 0, sizeVariants: [], colorVariants: '', variantImages: {}, genderFilter: 'all', isTopSelling: false, isUnder999: false });
           }
           setAddOpen(open);
         }}>
@@ -357,6 +385,25 @@ export default function Products() {
                       <p className="text-[10px] text-muted-foreground">Show in Top Selling section</p>
                     </div>
                     <Switch checked={form.isTopSelling} onCheckedChange={v => setForm({ ...form, isTopSelling: v })} />
+                  </div>
+                  <div className="space-y-1.5 flex items-center justify-between border border-amber-500/30 bg-amber-500/5 rounded-lg p-2">
+                    <div className="space-y-0.5">
+                      <Label className="flex items-center gap-1.5">
+                        <Tag className="w-3.5 h-3.5 text-amber-500" />
+                        Under ₹999 Collection
+                      </Label>
+                      <p className="text-[10px] text-muted-foreground">
+                        {form.sellingPrice >= 999 && form.isUnder999
+                          ? '⚠️ Selling price must be below ₹999 to tag'
+                          : 'Tag for the Under ₹999 buyer collection'}
+                      </p>
+                    </div>
+                    <Switch
+                      checked={form.isUnder999}
+                      onCheckedChange={v => setForm({ ...form, isUnder999: v })}
+                      disabled={form.sellingPrice >= 999}
+                      className="data-[state=checked]:bg-amber-500"
+                    />
                   </div>
                   <div className="col-span-2 space-y-1.5">
                     <Label>Description</Label>
@@ -607,10 +654,19 @@ export default function Products() {
         </Dialog>
       </div>
 
-      <Tabs defaultValue="products">
+      <Tabs defaultValue="products" onValueChange={setActiveTab}>
         <TabsList>
           <TabsTrigger value="products">Products</TabsTrigger>
           <TabsTrigger value="categories">Categories</TabsTrigger>
+          <TabsTrigger value="under999" className="gap-1.5">
+            <Tag className="w-3.5 h-3.5 text-amber-500" />
+            Under ₹999
+            {under999List.length > 0 && (
+              <span className="ml-1 bg-amber-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">
+                {under999List.length}
+              </span>
+            )}
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="products" className="space-y-4 mt-4">
@@ -686,7 +742,13 @@ export default function Products() {
                         <Button size="icon" variant="destructive" className="rounded-lg h-9 w-9" onClick={() => deleteProduct(product._id)}><Trash2 className="w-4 h-4" /></Button>
                       </div>
                       <Badge variant="outline" className={cn("absolute top-2 left-2 rounded-full text-xs bg-background/80 backdrop-blur-sm", stockStatus.style)}>{stockStatus.label}</Badge>
-                       <div className="absolute top-2 right-2 rounded-full bg-background/80 backdrop-blur-sm px-2 py-1 shadow flex items-center gap-2 cursor-pointer transition-colors hover:bg-background/90" onClick={(e) => e.stopPropagation()}>
+                      {/* badge: Under ₹999 tag indicator */}
+                  {product.isUnder999 && (
+                    <div className="absolute top-10 right-2 px-1.5 py-0.5 bg-amber-500 text-white text-[9px] font-bold rounded-full shadow-sm leading-tight">
+                      ₹999
+                    </div>
+                  )}
+                   <div className="absolute top-2 right-2 rounded-full bg-background/80 backdrop-blur-sm px-2 py-1 shadow flex items-center gap-2 cursor-pointer transition-colors hover:bg-background/90" onClick={(e) => e.stopPropagation()}>
                           <span className="text-[10px] font-semibold">{product.isActive ? 'Published' : 'Hidden'}</span>
                           <Switch checked={product.isActive} onCheckedChange={() => togglePublish(product._id, product.isActive)} className="scale-75 data-[state=checked]:bg-green-500" />
                        </div>
@@ -834,6 +896,113 @@ export default function Products() {
 
         <TabsContent value="categories" className="mt-4">
           <CategoryManager />
+        </TabsContent>
+
+        {/* ─── Under ₹999 Tab ──────────────────────────────────────────────── */}
+        <TabsContent value="under999" className="mt-4">
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-base font-semibold flex items-center gap-2">
+                  <Tag className="w-4 h-4 text-amber-500" />
+                  Under ₹999 Collection
+                </h3>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  {under999List.length} product{under999List.length !== 1 ? 's' : ''} tagged — visible in buyer app's Under ₹999 section
+                </p>
+              </div>
+              <Button variant="outline" size="sm" onClick={fetchUnder999} disabled={under999Loading} className="gap-2">
+                {under999Loading ? 'Refreshing...' : '↻ Refresh'}
+              </Button>
+            </div>
+
+            {under999Loading ? (
+              <div className="modern-card p-10 text-center text-muted-foreground text-sm animate-pulse">
+                Loading Under ₹999 products...
+              </div>
+            ) : under999List.length === 0 ? (
+              <div className="modern-card p-12 text-center">
+                <Tag className="w-10 h-10 text-amber-400/50 mx-auto mb-3" />
+                <h3 className="font-semibold text-foreground">No products tagged yet</h3>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Edit any product with a selling price below ₹999 and toggle the Under ₹999 switch.
+                </p>
+              </div>
+            ) : (
+              <div className="modern-card overflow-hidden">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Product</TableHead>
+                      <TableHead>Category</TableHead>
+                      <TableHead>Selling Price</TableHead>
+                      <TableHead>Rating</TableHead>
+                      <TableHead>Stock</TableHead>
+                      <TableHead className="text-right">Remove Tag</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {under999List.map(product => {
+                      const displayImage = product.variantImages?.[0]?.urls?.[0] || product.baseImages?.[0] || null;
+                      return (
+                        <TableRow key={product._id}>
+                          <TableCell>
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 rounded-lg bg-secondary flex items-center justify-center overflow-hidden flex-shrink-0">
+                                {displayImage ? <img src={displayImage} className="w-full h-full object-cover" alt={product.title} /> : '📦'}
+                              </div>
+                              <div>
+                                <p className="font-medium text-sm">{product.title}</p>
+                                <p className="text-[10px] text-muted-foreground font-mono">{product._id.slice(-6)}</p>
+                              </div>
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-sm">{getCategoryName(product.categoryId || product.category)}</TableCell>
+                          <TableCell>
+                            <span className="font-bold text-amber-600">₹{product.pricing?.sellingPrice?.toLocaleString()}</span>
+                          </TableCell>
+                          <TableCell className="text-sm">
+                            {product.ratings?.average > 0
+                              ? <span>⭐ {product.ratings.average.toFixed(1)} ({product.ratings.count})</span>
+                              : <span className="text-muted-foreground">No ratings</span>}
+                          </TableCell>
+                          <TableCell className="text-sm">{product.inventory?.stockQuantity ?? 0} units</TableCell>
+                          <TableCell className="text-right">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="border-red-200 text-red-500 hover:bg-red-50 hover:border-red-300 gap-1.5 text-xs"
+                              onClick={async () => {
+                                try {
+                                  const res = await fetch(`${API_BASE_URL}/api/products/${product._id}`, {
+                                    method: 'PUT',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ isUnder999: false }),
+                                  });
+                                  if (res.ok) {
+                                    setUnder999List(prev => prev.filter(p => p._id !== product._id));
+                                    setProductList(prev => prev.map(p => p._id === product._id ? { ...p, isUnder999: false } : p));
+                                    toast({ title: 'Tag removed', description: `${product.title} removed from Under ₹999 collection.` });
+                                  } else {
+                                    const err = await res.json();
+                                    toast({ title: 'Error', description: err.message || 'Failed to remove tag', variant: 'destructive' });
+                                  }
+                                } catch {
+                                  toast({ title: 'Error', variant: 'destructive', description: 'Failed to connect to server' });
+                                }
+                              }}
+                            >
+                              <X className="w-3.5 h-3.5" /> Remove
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </div>
         </TabsContent>
       </Tabs>
     </div>

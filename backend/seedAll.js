@@ -18,9 +18,9 @@ const SAMPLE_IMAGES = [
   'https://res.cloudinary.com/dfmhweist/image/upload/v1775153575/surat-garment-logos/f7avz6xhagwhoejfszkw.avif'
 ];
 
-const COLORS = ['Red', 'Blue', 'Black', 'White', 'Pink', 'Yellow', 'Navy'];
-const SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
-const ADJECTIVES = ['Premium', 'Elegant', 'Casual', 'Classic', 'Stylish', 'Comfortable', 'Modern', 'Chic', 'Trendy', 'Luxe'];
+const COLORS = ['Red', 'Blue', 'Green', 'Yellow', 'Pink', 'Maroon', 'Gold', 'Purple', 'Orange', 'Magenta'];
+const SIZES = ['Free Size'];
+const ADJECTIVES = ['Pure', 'Elegant', 'Bridal', 'Classic', 'Traditional', 'Designer', 'Handwoven', 'Party Wear', 'Festive', 'Luxe'];
 
 const randItem = (arr) => arr[Math.floor(Math.random() * arr.length)];
 const randInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
@@ -30,11 +30,17 @@ const seedDatabase = async () => {
     await mongoose.connect(process.env.MONGO_URI);
     console.log('✅ MongoDB Connected...');
 
-    // ── Step 1: Get storeId from the first registered user ──
-    const user = await User.findOne({}).select('storeId email storeName');
+    // ── Step 1: Get storeId from the first registered user, or create one ──
+    let user = await User.findOne({}).select('storeId email storeName');
     if (!user || !user.storeId) {
-      console.log('❌ Error: No registered user with a storeId found. Please register/login in the admin panel first.');
-      process.exit(1);
+      console.log('⚠️ No registered user found. Creating a default admin user...');
+      user = await User.create({
+        email: 'admin@suratgarment.com',
+        password: 'password123',
+        storeName: 'Surat Garment Admin',
+        storeId: 'STORE_DEFAULT_001',
+        isProfileComplete: true
+      });
     }
     console.log(`✅ Using storeId: "${user.storeId}" (${user.email})`);
 
@@ -47,25 +53,25 @@ const seedDatabase = async () => {
     // ── Step 3: Insert Categories ──
     const categoryData = [
       {
-        name: 'Men',
-        slug: 'men',
-        description: 'Premium clothing for men',
+        name: 'Silk Sarees',
+        slug: 'silk-sarees',
+        description: 'Premium traditional and bridal silk sarees',
         image: SAMPLE_IMAGES[0],
-        subcategories: [{ name: 'Shirts' }, { name: 'T-Shirts' }, { name: 'Jeans' }, { name: 'Trousers' }]
+        subcategories: [{ name: 'Banarasi' }, { name: 'Kanjivaram' }, { name: 'Art Silk' }, { name: 'Paithani' }]
       },
       {
-        name: 'Women',
-        slug: 'women',
-        description: 'Elegant clothing for women',
+        name: 'Cotton Sarees',
+        slug: 'cotton-sarees',
+        description: 'Comfortable and breathable daily wear cotton sarees',
         image: SAMPLE_IMAGES[1],
-        subcategories: [{ name: 'Dresses' }, { name: 'Tops' }, { name: 'Sarees' }, { name: 'Kurtis' }]
+        subcategories: [{ name: 'Pure Cotton' }, { name: 'Chanderi' }, { name: 'Linen' }, { name: 'Kota Doria' }]
       },
       {
-        name: 'Kids',
-        slug: 'kids',
-        description: 'Comfortable clothing for kids',
+        name: 'Designer Sarees',
+        slug: 'designer-sarees',
+        description: 'Exclusive designer sarees for parties and special occasions',
         image: SAMPLE_IMAGES[2],
-        subcategories: [{ name: 'Boys Clothing' }, { name: 'Girls Clothing' }, { name: 'Infants' }]
+        subcategories: [{ name: 'Party Wear' }, { name: 'Embroidered' }, { name: 'Georgette' }, { name: 'Chiffon' }]
       }
     ];
 
@@ -105,9 +111,9 @@ const seedDatabase = async () => {
       }));
       
       const genderMap = {
-        'Men': 'men',
-        'Women': 'women',
-        'Kids': 'kids'
+        'Silk Sarees': 'women',
+        'Cotton Sarees': 'women',
+        'Designer Sarees': 'women'
       };
 
       products.push({

@@ -15,10 +15,11 @@ import { cn } from '@/lib/utils';
 const API = API_BASE_URL;
 
 const SECTION_TYPES = [
-  { value: 'BEST_OFFERS', label: 'Best Offers', description: 'Auto-pulls discounted products' },
-  { value: 'NEW_ARRIVALS', label: 'New Arrivals', description: 'Auto-pulls recently added products' },
-  { value: 'TOP_PICKS', label: 'Top Picks', description: 'Your manually curated picks' },
+  { value: 'BEST_OFFERS',        label: 'Best Offers',        description: 'Auto-pulls discounted products' },
+  { value: 'NEW_ARRIVALS',       label: 'New Arrivals',       description: 'Auto-pulls recently added products' },
+  { value: 'TOP_PICKS',          label: 'Top Picks',          description: 'Your manually curated picks' },
   { value: 'PROMOTIONAL_BANNER', label: 'Promotional Banner', description: 'Full-width promotional banner strip' },
+  { value: 'UNDER_PRICE',        label: 'Under ₹ Price',      description: 'Products below a price you configure — no manual tagging needed' },
 ];
 
 const TEMPLATE_TYPES: Record<string, { value: string; label: string }[]> = {
@@ -26,6 +27,7 @@ const TEMPLATE_TYPES: Record<string, { value: string; label: string }[]> = {
   NEW_ARRIVALS: [{ value: 'PRODUCT_GRID', label: 'Product Grid (Scroll)' }, { value: 'PRODUCT_3X2', label: 'Product Grid (3×2)' }],
   TOP_PICKS: [{ value: 'PRODUCT_GRID', label: 'Product Grid (Scroll)' }, { value: 'PRODUCT_3X2', label: 'Product Grid (3×2)' }],
   PROMOTIONAL_BANNER: [{ value: 'PROMOTIONAL_BANNER', label: 'Promotional Banner' }],
+  UNDER_PRICE:        [{ value: 'PRODUCT_GRID', label: 'Product Grid (Scroll)' }, { value: 'PRODUCT_3X2', label: 'Product Grid (3×2)' }],
 };
 
 const SECTION_COLORS: Record<string, string> = {
@@ -35,6 +37,7 @@ const SECTION_COLORS: Record<string, string> = {
   NEW_ARRIVALS: 'from-purple-500/20 to-pink-500/20 border-purple-500/30',
   TOP_PICKS: 'from-rose-500/20 to-red-500/20 border-rose-500/30',
   PROMOTIONAL_BANNER: 'from-cyan-500/20 to-sky-500/20 border-cyan-500/30',
+  UNDER_PRICE:        'from-green-500/20 to-lime-500/20 border-green-500/30',
 };
 
 const SECTION_LABELS: Record<string, string> = {
@@ -44,7 +47,26 @@ const SECTION_LABELS: Record<string, string> = {
   NEW_ARRIVALS: 'New Arrivals',
   TOP_PICKS: 'Top Picks',
   PROMOTIONAL_BANNER: 'Promotional Banner',
+  UNDER_PRICE:        'Under ₹ Price',
 };
+
+/**
+ * Returns a human-readable label for an UNDER_PRICE section.
+ * Falls back to the generic label when config is missing.
+ */
+function underPriceLabel(section: any): string {
+  const mp = section?.config?.maxPrice;
+  return mp != null ? `Under ₹${Number(mp).toLocaleString('en-IN')}` : 'Under ₹ Price';
+}
+
+/** Client-side validation for the maxPrice field. Returns an error string or null. */
+function validateMaxPrice(raw: string): string | null {
+  if (!raw || raw.trim() === '') return 'Price threshold is required for this section type.';
+  const n = Number(raw);
+  if (!Number.isFinite(n) || n <= 0) return 'Enter a positive number (e.g. 499, 999).';
+  if (n > 100_000) return 'Price threshold cannot exceed ₹1,00,000.';
+  return null;
+}
 
 // ─── Mobile Simulator Components ────────────────────────────────────────────
 
@@ -159,6 +181,10 @@ function MobileSection({ section }: { section: any }) {
       return section.templateType === 'PRODUCT_3X2'
         ? <MobileProduct3x2 title={title} />
         : <MobileProductScroll title={title} />;
+    case 'UNDER_PRICE':
+      return section.templateType === 'PRODUCT_3X2'
+        ? <MobileProduct3x2 title={underPriceLabel(section)} />
+        : <MobileProductScroll title={underPriceLabel(section)} />;
     default: return null;
   }
 }
@@ -169,7 +195,8 @@ export default function HomeBuilder() {
   const [sections, setSections] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [addOpen, setAddOpen] = useState(false);
-  const [form, setForm] = useState({ sectionType: '', templateType: '', title: '' });
+  const [form, setForm] = useState({ sectionType: '', templateType: '', title: '', maxPrice: '' });
+  const [maxPriceError, setMaxPriceError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [configureSection, setConfigureSection] = useState<any | null>(null); // which locked section is being configured
   const [sectionBanners, setSectionBanners] = useState<any[]>([]); // banners loaded for the configure dialog
@@ -210,18 +237,31 @@ export default function HomeBuilder() {
 
   const handleAddSection = async () => {
     if (!form.sectionType || !form.templateType) return;
+
+    // Validate maxPrice for UNDER_PRICE sections
+    if (form.sectionType === 'UNDER_PRICE') {
+      const err = validateMaxPrice(form.maxPrice);
+      if (err) { setMaxPriceError(err); return; }
+    }
+
     setIsSubmitting(true);
     try {
+      const config: Record<string, unknown> = {};
+      if (form.sectionType === 'UNDER_PRICE') {
+        config.maxPrice = Number(form.maxPrice);
+      }
+
       const res = await fetch(`${API}/api/home-sections`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ storeId, ...form })
+        body: JSON.stringify({ storeId, sectionType: form.sectionType, templateType: form.templateType, title: form.title, config })
       });
       const data = await res.json();
       if (data.success) {
         toast({ title: 'Section added!' });
         setAddOpen(false);
-        setForm({ sectionType: '', templateType: '', title: '' });
+        setForm({ sectionType: '', templateType: '', title: '', maxPrice: '' });
+        setMaxPriceError(null);
         fetchSections();
       } else {
         toast({ title: 'Error', description: data.message, variant: 'destructive' });
@@ -361,21 +401,53 @@ export default function HomeBuilder() {
                   </div>
                 )}
 
+                {/* Price threshold — only shown for UNDER_PRICE */}
+                {form.sectionType === 'UNDER_PRICE' && (
+                  <div className="space-y-1.5">
+                    <Label>Price Threshold <span className="text-red-500">*</span></Label>
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-medium">₹</span>
+                      <Input
+                        className="pl-7"
+                        type="number"
+                        min={1}
+                        max={100000}
+                        placeholder="e.g. 499 or 999"
+                        value={form.maxPrice}
+                        onChange={e => { setForm({ ...form, maxPrice: e.target.value }); setMaxPriceError(null); }}
+                        onBlur={() => setMaxPriceError(validateMaxPrice(form.maxPrice))}
+                      />
+                    </div>
+                    {maxPriceError && <p className="text-xs text-red-500">{maxPriceError}</p>}
+                    <p className="text-xs text-muted-foreground">Buyer app will show all active products priced at or below this amount.</p>
+                  </div>
+                )}
+
                 <div className="space-y-1.5">
-                  <Label>Section Title (Optional)</Label>
+                  <Label>
+                    Section Title{' '}
+                    {form.sectionType === 'UNDER_PRICE' && form.maxPrice && !maxPriceError
+                      ? <span className="text-muted-foreground font-normal text-xs">(leave blank to auto-use "Under ₹{Number(form.maxPrice).toLocaleString('en-IN')}")</span>
+                      : <span className="text-muted-foreground font-normal text-xs">(Optional)</span>
+                    }
+                  </Label>
                   <Input
-                    placeholder={`e.g. ${SECTION_TYPES.find(s => s.value === form.sectionType)?.label || 'Section Title'}`}
+                    placeholder={
+                      form.sectionType === 'UNDER_PRICE' && form.maxPrice && !maxPriceError
+                        ? `Under ₹${Number(form.maxPrice).toLocaleString('en-IN')}`
+                        : `e.g. ${SECTION_TYPES.find(s => s.value === form.sectionType)?.label || 'Section Title'}`
+                    }
                     value={form.title}
                     onChange={e => setForm({ ...form, title: e.target.value })}
                   />
                 </div>
 
                 <div className="flex justify-end gap-2 pt-2 border-t">
-                  <Button variant="outline" onClick={() => setAddOpen(false)}>Cancel</Button>
+                  <Button variant="outline" onClick={() => { setAddOpen(false); setMaxPriceError(null); }}>Cancel</Button>
                   <Button
                     className="gradient-primary text-primary-foreground"
                     onClick={handleAddSection}
-                    disabled={!form.sectionType || !form.templateType || isSubmitting}
+                    disabled={!form.sectionType || !form.templateType || isSubmitting || (form.sectionType === 'UNDER_PRICE' && !!validateMaxPrice(form.maxPrice))}
                   >
                     {isSubmitting ? 'Adding…' : 'Add Section'}
                   </Button>
@@ -416,11 +488,20 @@ export default function HomeBuilder() {
 
                 {/* Info */}
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <p className="font-semibold text-sm text-foreground">{section.title || SECTION_LABELS[section.sectionType]}</p>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <p className="font-semibold text-sm text-foreground">
+                      {section.sectionType === 'UNDER_PRICE'
+                        ? (section.title || underPriceLabel(section))
+                        : (section.title || SECTION_LABELS[section.sectionType])}
+                    </p>
                     {section.isLocked && (
                       <Badge variant="secondary" className="text-[9px] gap-1 py-0 px-1.5">
                         <Lock className="w-2.5 h-2.5" /> Locked
+                      </Badge>
+                    )}
+                    {section.sectionType === 'UNDER_PRICE' && section.config?.maxPrice != null && (
+                      <Badge className="text-[9px] py-0 px-1.5 bg-green-100 text-green-700 border border-green-200 hover:bg-green-100">
+                        ≤ ₹{Number(section.config.maxPrice).toLocaleString('en-IN')}
                       </Badge>
                     )}
                   </div>

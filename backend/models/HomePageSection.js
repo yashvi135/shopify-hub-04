@@ -8,6 +8,7 @@ const SECTION_TYPES = [
   'NEW_ARRIVALS',        // Auto-pulls recently added products
   'TOP_PICKS',           // Manually curated featured products
   'PROMOTIONAL_BANNER',  // A standalone promotional banner strip
+  'UNDER_PRICE',         // Dynamic price-cap section — config.maxPrice drives the filter
 ];
 
 // Template types: how the section looks visually

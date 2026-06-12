@@ -214,6 +214,58 @@ router.get('/', async (req, res) => {
   }
 });
 
+// @desc    Get products under a dynamic price cap (for UNDER_PRICE home section)
+// @route   GET /api/products/under-price?maxPrice=499&limit=20&page=1&storeId=xxx
+// @access  Public
+// IMPORTANT: must be declared BEFORE /:id — prevents "under-price" being cast as ObjectId
+router.get('/under-price', async (req, res) => {
+  try {
+    const maxPrice = parseFloat(req.query.maxPrice);
+
+    if (!req.query.maxPrice) {
+      return res.status(400).json({ success: false, message: 'maxPrice is required. Example: ?maxPrice=999' });
+    }
+    if (!Number.isFinite(maxPrice) || maxPrice <= 0) {
+      return res.status(400).json({ success: false, message: 'maxPrice must be a positive number greater than 0.' });
+    }
+    if (maxPrice > 100000) {
+      return res.status(400).json({ success: false, message: 'maxPrice cannot exceed ₹1,00,000.' });
+    }
+
+    const limit = Math.min(Math.max(parseInt(req.query.limit) || 20, 1), 100);
+    const page  = Math.max(parseInt(req.query.page) || 1, 1);
+    const skip  = (page - 1) * limit;
+
+    const query = { isActive: true, 'pricing.sellingPrice': { $gt: 0, $lte: maxPrice } };
+    if (req.query.storeId) query.storeId = req.query.storeId.trim();
+
+    if (req.query.cursor) {
+      query._id = { $lt: req.query.cursor };
+    }
+
+    const [products, total] = await Promise.all([
+      Product.find(query)
+        .sort({ discountPercentage: -1, createdAt: -1 })
+        .skip(req.query.cursor ? 0 : skip)
+        .limit(limit)
+        .populate('category', 'name image')
+        .lean(),
+      Product.countDocuments(query),
+    ]);
+
+    const nextCursor = products.length === limit ? products[products.length - 1]._id : null;
+
+    res.status(200).json({
+      success: true,
+      maxPrice,
+      data: products,
+      pagination: { total, page, limit, totalPages: Math.ceil(total / limit), nextCursor },
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
 // @desc    Get single product
 // @route   GET /api/products/:id
 // @access  Public
